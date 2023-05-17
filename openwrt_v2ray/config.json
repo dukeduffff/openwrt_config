@@ -1,0 +1,171 @@
+{
+  "log": {
+    "error": "/root/passwall/v2ray/error.log",
+    "loglevel": "none",
+    "access": "/root/passwall/v2ray/access.log"
+  },
+  "inbounds": [
+    {
+      "port": 1070,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "network": "tcp,udp",
+        "followRedirect": true
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "fakedns"
+        ]
+      },
+      "tag": "in"
+    },
+    {
+      "port": 5153,
+      "tag": "dns-in",
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "127.0.0.1",
+        "port": 1745,
+        "network": "tcp,udp",
+        "userLevel": 1
+      }
+    },
+    {
+      "port": 1071,
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+            "alertId": 0
+          }
+        ]
+      },
+      "tag": "remote_in"
+    }
+  ],
+  "outbounds": [
+    {
+      "mux": {
+        "enabled": true,
+        "concurrency": 8
+      },
+      "protocol": "vless",
+      "streamSettings": {
+        "wsSettings": {
+          "path": "/home",
+          "headers": {
+            "host": "cntest.duke2022.ga"
+          }
+        },
+        "tlsSettings": {
+          "allowInsecure": true,
+          "serverName": "cntest.duke2022.ga"
+        },
+        "security": "tls",
+        "network": "ws"
+      },
+      "tag": "proxy",
+      "settings": {
+        "vnext": [
+          {
+            "address": "cntest.duke2022.ga",
+            "users": [
+              {
+                "encryption": "none",
+                "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                "level": 0
+              }
+            ],
+            "port": 443
+          }
+        ]
+      }
+    },
+    {
+      "protocol": "vless",
+      "streamSettings": {
+        "grpcSettings": {
+          "serviceName": "home"
+        },
+        "tlsSettings": {
+          "allowInsecure": true,
+          "serverName": "www.cntest2022.cf"
+        },
+        "security": "tls",
+        "network": "grpc"
+      },
+      "tag": "proxy_grpc",
+      "settings": {
+        "vnext": [
+          {
+            "address": "2606:4700:a0::b628:50e5",
+            "users": [
+              {
+                "encryption": "none",
+                "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                "level": 0
+              }
+            ],
+            "port": 443
+          }
+        ]
+      }
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "UseIP",
+        "userLevel": 0
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "none"
+        }
+      }
+    },
+    {
+      "protocol": "dns",
+      "tag": "dns-out"
+    }
+  ],
+  "dns": {
+    "servers": [
+      "fakedns"
+    ],
+    "queryStrategy": "UseIPv4"
+  },
+  "routing": {
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": "dns-in",
+        "outboundTag": "dns-out"
+      },
+      {
+        "type": "field",
+        "inboundTag": "in",
+        "outboundTag": "proxy_grpc"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "openmv.dynv6.net"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "inboundTag": "remote_in",
+        "outboundTag": "proxy_grpc"
+      }
+    ]
+  },
+  "transport": {}
+}

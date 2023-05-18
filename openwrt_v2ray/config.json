@@ -70,7 +70,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "cntest.duke2022.ga",
+            "address": "upload.yunzhongzhuan.com",
             "users": [
               {
                 "encryption": "none",
@@ -100,7 +100,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "2606:4700:a0::b628:50e5",
+            "address": "172.67.171.3",
             "users": [
               {
                 "encryption": "none",

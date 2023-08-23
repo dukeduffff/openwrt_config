@@ -13,7 +13,69 @@ echo -e 'vfio\nvfio_iommu_type1\nvfio_pci\nvfio_virqfd' >> /etc/modules
 update-grub
 update-initramfs -u -k all
 
+# lxc安装
+lxc.apparmor.profile: unconfined  
+lxc.cgroup.devices.allow: a  
+lxc.cap.drop:
+lxc.cgroup2.devices.allow: c 226:0 rwm
+lxc.cgroup2.devices.allow: c 226:128 rwm
+lxc.mount.entry: /dev/dri/card0 dev/dri/card0 none bind,optional,create=file
+lxc.mount.entry: /dev/dri/renderD128 dev/dri/renderD128 none bind,optional,create=file
 
+apt install docker.io
+docker pull nyanmisaka/jellyfin:latest
+# 参考： https://www.bilibili.com/read/cv14514123?msource=smzdm_937_0_184__276a8519ee7f1660
+
+sudo docker run -d --name=Jellyfin -p 8096:8096 \  # --name=Jellyfin 将容器名定义为 Jellyfin 
+	-p 8920:8920 -p 7359:7359/udp -p 1900:1900/udp #这三个端口为可选项 \
+	-v /root/jellyfin/config:/config -v /root/jellyfin/cache:/cache -v /root/media:/media \
+	-e TZ=Asia/Shanghai -e PUID=0 -e PGID=0 \	#将容器的时区设为上海,使用窗口在运行时使用root权限
+	--device=/dev/dri:/dev/dri \	#直通显卡给 Docker 容器，用于硬解
+	--add-host=api.themoviedb.org:13.224.161.90 \	#为容器增加 host 指向，加速海报与影视元数据的搜刮
+	--add-host=api.themoviedb.org:13.35.8.65 \
+	--add-host=api.themoviedb.org:13.35.8.93 \
+	--add-host=api.themoviedb.org:13.35.8.6 \
+	--add-host=api.themoviedb.org:13.35.8.54 \
+	--add-host=image.tmdb.org:138.199.37.230 \
+	--add-host=image.tmdb.org:108.138.246.49 \
+	--add-host=api.thetvdb.org:13.225.89.239 \
+	--add-host=api.thetvdb.org:192.241.234.54 \
+	--restart unless-stopped \
+	nyanmisaka/jellyfin:latest
+
+	#如果使用 linuxserver/jellyfin 镜像，就把最后一行替换为下行
+	lscr.io/linuxserver/jellyfin:latest
+	#如果使用 nyanmisaka/jellyfin  镜像，最把最后一行替换为下行
+	nyanmisaka/jellyfin:latest
+
+docker run -d --name=Jellyfin -p 8096:8096 \
+	-p 8920:8920 -p 7359:7359/udp -p 1900:1900/udp \
+	-v /root/jellyfin/config:/config -v /root/jellyfin/cache:/cache -v /root/media:/media \
+	-e TZ=Asia/Shanghai -e PUID=0 -e PGID=0 \
+	--device=/dev/dri:/dev/dri \
+	--add-host=api.themoviedb.org:13.224.161.90 \
+	--add-host=api.themoviedb.org:13.35.8.65 \
+	--add-host=api.themoviedb.org:13.35.8.93 \
+	--add-host=api.themoviedb.org:13.35.8.6 \
+	--add-host=api.themoviedb.org:13.35.8.54 \
+	--add-host=image.tmdb.org:138.199.37.230 \
+	--add-host=image.tmdb.org:108.138.246.49 \
+	--add-host=api.thetvdb.org:13.225.89.239 \
+	--add-host=api.thetvdb.org:192.241.234.54 \
+	--restart unless-stopped \
+	nyanmisaka/jellyfin:latest
+# 挂载smb
+apt install cifs-utils
+mount -t cifs //192.168.31.3/download /root/media -o username=duke,nobrl
+mount -t cifs //192.168.31.3/media /root/jellyfin -o username=duke,nobrl
+
+# 挂载webdav
+apt install davfs2
+mount -t davfs http://dsm.openmv.dynv6.net:5005/download /root/media
+
+# 核显直通 9500T
+
+args: -device vfio-pci,host=00:02.0,addr=0x02,x-pci-device-id=0x3E92
 
 
 

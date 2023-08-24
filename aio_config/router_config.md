@@ -68,3 +68,12 @@ echo 0 > /proc/sys/net/bridge/bridge-nf-call-ip6tables
 echo 0 > /proc/sys/net/bridge/bridge-nf-call-arptables
 echo 0 > /proc/sys/net/bridge/bridge-nf-call-custom
 ```
+
+### 4. 重装流程
+#### 1. 备份
+1. 宽带账号密码
+261010087356
+33848492
+2. v2ray配置
+#### 2. 安装
+1. 替换镜像, 然后恢复出厂

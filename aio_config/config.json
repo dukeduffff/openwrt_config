@@ -90,7 +90,7 @@
           "serviceName": "home"
         },
         "tlsSettings": {
-          "allowInsecure": true,
+          "allowInsecure": false,
           "serverName": "www.cntest2022.cf"
         },
         "security": "tls",
@@ -157,6 +157,13 @@
         "type": "field",
         "domain": [
           "openmv.dynv6.net"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:private"
         ],
         "outboundTag": "direct"
       },

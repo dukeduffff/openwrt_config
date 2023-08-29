@@ -90,7 +90,7 @@ qm set 101 -sata1 /dev/disk/by-id/ata-ST2000DM005-2CW102_ZFM0G0QB
 /var/lib/vz/template/iso/openwrt.img
 
 qm importdisk 100 /var/lib/vz/template/iso/openwrt.img local-lvm
-qm importdisk 100 /var/lib/vz/template/iso/openwrt-05.09.2023-x86-64-generic-squashfs-combined-efi.img local-lvm
+qm importdisk 100 /var/lib/vz/template/iso/openwrt-08.23.2023-x86-64-generic-squashfs-combined-efi.img local-lvm
 qm importdisk 100 /var/lib/vz/template/iso/openwrt.img local-lvm
 
 

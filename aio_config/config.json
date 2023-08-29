@@ -133,6 +133,19 @@
     {
       "protocol": "dns",
       "tag": "dns-out"
+    },
+    {
+      "protocol": "freedom",
+      "streamSettings": {
+        "sockopt": {
+          "tcpFastOpen": true,
+          "interface": "warp"
+        }
+      },
+      "settings": {
+        "domainStrategy": "AsIs"
+      },
+      "tag": "warp-ipv6"
     }
   ],
   "dns": {
@@ -151,7 +164,7 @@
       {
         "type": "field",
         "inboundTag": "in",
-        "outboundTag": "proxy_grpc"
+        "outboundTag": "warp-ipv6"
       },
       {
         "type": "field",

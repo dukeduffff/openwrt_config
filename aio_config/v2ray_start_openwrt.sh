@@ -21,7 +21,7 @@ start_service() {
     procd_set_param stdout 1 # 转发 stdout 输出到 logd
     procd_set_param stderr 1 # same for stderr
     procd_set_param user root # 以 nobody 用户运行服务
-    procd_set_param pidfile /var/run/somefile.pid # 在服务启动时写入一个 pid 文件，在停止服务时删除此 pid 文件
+    procd_set_param pidfile /var/run/v2ray.pid # 在服务启动时写入一个 pid 文件，在停止服务时删除此 pid 文件
     procd_close_instance # 结束服务实例配置
 }
 stop_service() {

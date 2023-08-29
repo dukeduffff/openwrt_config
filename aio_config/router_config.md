@@ -77,3 +77,10 @@ echo 0 > /proc/sys/net/bridge/bridge-nf-call-custom
 2. v2ray配置
 #### 2. 安装
 1. 替换镜像, 然后恢复出厂
+
+
+### 5. warp安装说明
+```
+https://github.com/fscarmen/warp
+https://github.com/pufferffish/wireproxy
+```

@@ -1,9 +1,15 @@
 {
   "log": {
-    "error": "/root/passwall/v2ray/error.log",
-    "loglevel": "none",
-    "access": "/root/passwall/v2ray/access.log"
+    "error": "/root/passwall/error.log",
+    "loglevel": "warning",
+    "access": "none"
   },
+  "fakedns": [
+    {
+      "ipPool": "198.18.0.0/15",
+      "poolSize": 65535
+    }
+  ],
   "inbounds": [
     {
       "port": 1070,
@@ -15,7 +21,9 @@
       "sniffing": {
         "enabled": true,
         "destOverride": [
-          "fakedns"
+          "fakedns",
+          "http",
+          "tls"
         ]
       },
       "tag": "in"
@@ -25,8 +33,8 @@
       "tag": "dns-in",
       "protocol": "dokodemo-door",
       "settings": {
-        "address": "127.0.0.1",
-        "port": 1745,
+        "address": "8.8.8.8",
+        "port": 53,
         "network": "tcp,udp",
         "userLevel": 1
       }
@@ -100,7 +108,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "172.67.171.3",
+            "address": "upload.yunzhongzhuan.com",
             "users": [
               {
                 "encryption": "none",
@@ -114,10 +122,46 @@
       }
     },
     {
+      "protocol": "vless",
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "free.cntest2022.cf",
+          "allowInsecure": false
+        },
+        "wsSettings": {
+          "path": "/?ed=2048",
+          "headers": {
+            "Host": "free.cntest2022.cf"
+          }
+        },
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "settings": {
+        "vnext": [
+          {
+            "address": "v4.cfnode.eu.org",
+            "port": 443,
+            "users": [
+              {
+                "id": "f85f055a-ec22-4212-811a-95f560d80270",
+                "encryption": "none",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+      "tag": "proxy_cf"
+    },
+    {
       "tag": "direct",
       "protocol": "freedom",
       "settings": {
-        "domainStrategy": "UseIP",
+        "domainStrategy": "AsIs",
         "userLevel": 0
       }
     },
@@ -132,27 +176,53 @@
     },
     {
       "protocol": "dns",
-      "tag": "dns-out"
+      "tag": "dns-out",
+      "streamSettings": {
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "proxySettings": {
+        "tag": "proxy_grpc"
+      }
     },
     {
       "protocol": "freedom",
       "streamSettings": {
         "sockopt": {
-          "tcpFastOpen": true,
-          "interface": "warp"
+          "mark": 255
         }
       },
       "settings": {
-        "domainStrategy": "AsIs"
+        "domainStrategy": "UseIPv4"
       },
-      "tag": "warp-ipv6"
+      "sendThrough": "172.16.0.2",
+      "tag": "wgcf"
     }
   ],
   "dns": {
+    "hosts": {
+      "dns.google": "8.8.8.8",
+      "domain:cntest2022.cf": "v4.cfnode.eu.org"
+    },
     "servers": [
-      "fakedns"
+      {
+        "address": "https+local://doh.pub/dns-query",
+        "domains": [
+          "domain:eu.org"
+        ]
+      },
+      {
+        "address": "fakedns",
+        "domains": [
+          "geosite:gfw"
+        ],
+        "skipFallback": true
+      }
     ],
-    "queryStrategy": "UseIPv4"
+    "queryStrategy": "UseIP",
+    "disableFallback": true,
+    "tag": "dns_inbound"
   },
   "routing": {
     "rules": [
@@ -164,7 +234,12 @@
       {
         "type": "field",
         "inboundTag": "in",
-        "outboundTag": "warp-ipv6"
+        "outboundTag": "proxy_grpc"
+      },
+      {
+        "type": "field",
+        "inboundTag": "dns_inbound",
+        "outboundTag": "proxy_grpc"
       },
       {
         "type": "field",

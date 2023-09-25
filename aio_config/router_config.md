@@ -44,21 +44,53 @@ cp /root/passwall/gfwlist.conf /tmp/dnsmasq.d/
 
 /etc/init.d/dnsmasq restart
 
-ipset create gfwlist hash:net
-ipset add gfwlist 198.18.0.0/15
-ipset add gfwlist 91.108.4.0/22
-ipset add gfwlist 91.108.8.0/22
-ipset add gfwlist 91.108.12.0/22
-ipset add gfwlist 91.108.20.0/22
-ipset add gfwlist 91.108.36.0/23
-ipset add gfwlist 91.108.38.0/23
-ipset add gfwlist 91.108.56.0/22
-ipset add gfwlist 149.154.160.0/20
-ipset add gfwlist 149.154.164.0/22
-ipset add gfwlist 149.154.172.0/22
+ip route add default via 172.16.0.2 dev wgcf table 100
+ip rule add fwmark 0xff table 100
 
-iptables -t nat -A PREROUTING -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-port 1070
-iptables -t nat -A OUTPUT -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-port 1070
+# ipset create gfwlist_dynamic hash:ip timeout 3600 hashsize 10000 maxelem 10000
+ipset create gfwlist hash:net timeout 3600 hashsize 10000 maxelem 100000
+# ipset add gfwlist 198.18.0.0/15
+ipset add gfwlist 91.108.4.0/22 timeout 0
+ipset add gfwlist 91.108.8.0/22 timeout 0
+ipset add gfwlist 91.108.12.0/22 timeout 0
+ipset add gfwlist 91.108.20.0/22 timeout 0
+ipset add gfwlist 91.108.36.0/23 timeout 0
+ipset add gfwlist 91.108.38.0/23 timeout 0
+ipset add gfwlist 91.108.56.0/22 timeout 0
+ipset add gfwlist 149.154.160.0/20 timeout 0
+ipset add gfwlist 149.154.164.0/22 timeout 0
+ipset add gfwlist 149.154.172.0/22 timeout 0
+ipset add gfwlist 185.76.151.0/24 timeout 0
+
+iptables -t nat -N V2RAY
+iptables -t nat -A V2RAY -j RETURN -m mark --mark 0xff
+iptables -t nat -A V2RAY -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-port 1070
+iptables -t nat -A PREROUTING -j V2RAY
+
+
+iptables -t nat -N V2RAY_MASK
+iptables -t nat -A V2RAY_MASK -j RETURN -m mark --mark 0xff
+iptables -t nat -A V2RAY_MASK -p tcp -m set --match-set gfwlist dst -j REDIRECT --to-port 1070
+iptables -t nat -A OUTPUT -j V2RAY_MASK
+
+ipset create gfwlist6 hash:net family inet6 timeout 3600 hashsize 10000 maxelem 100000
+ipset add gfwlist6 2001:b28:f23d::/48 timeout 0
+ipset add gfwlist6 2001:b28:f23f::/48 timeout 0
+ipset add gfwlist6 2001:67c:4e8::/48 timeout 0
+ipset add gfwlist6 2001:b28:f23c::/48 timeout 0
+ipset add gfwlist6 2a0a:f280::/32 timeout 0
+
+ip6tables -t nat -N V2RAY6
+ip6tables -t nat -A V2RAY6 -j RETURN -m mark --mark 0xff
+ip6tables -t nat -A V2RAY6 -p tcp -m set --match-set gfwlist6 dst -j REDIRECT --to-port 1070
+ip6tables -t nat -A PREROUTING -j V2RAY6
+
+
+ip6tables -t nat -N V2RAY_MASK6
+ip6tables -t nat -A V2RAY_MASK6 -j RETURN -m mark --mark 0xff
+ip6tables -t nat -A V2RAY_MASK6 -p tcp -m set --match-set gfwlist6 dst -j REDIRECT --to-port 1070
+ip6tables -t nat -A OUTPUT -j V2RAY_MASK6
+
 ```
 
 ### 3. 小米路由器旁路由配置
@@ -83,4 +115,10 @@ echo 0 > /proc/sys/net/bridge/bridge-nf-call-custom
 ```
 https://github.com/fscarmen/warp
 https://github.com/pufferffish/wireproxy
+
+warp优选:
+https://blog.misaka.rest/2023/03/12/cf-warp-yxip/
+
+workers创建vless协议
+https://jdssl.top/index.php/2023/07/21/2023vpn/?__cf_chl_tk=5b2rH74paFlUZYNMmBiBRT515ghCbt7DgdtGGjYzoOg-1693450307-0-gaNycGzNCvs
 ```

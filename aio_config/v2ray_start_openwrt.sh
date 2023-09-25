@@ -5,8 +5,8 @@ START=95
 STOP=15
 
 start_service() {
-    procd_open_instance v2ray # 给服务实例定义一个名称
-    procd_set_param command /root/passwall/v2ray/v2ray run -config /root/passwall/v2ray/config.json # 需要在前台被执行的服务
+    procd_open_instance xray # 给服务实例定义一个名称
+    procd_set_param command /root/passwall/xray/xray run -config /root/passwall/xray/config.json # 需要在前台被执行的服务
     # procd_append_param command -bar 42 # 给以上命令附加的指令参数
 
     # 如果服务意外中止了，定义 redpawn 可以自动重启它，如果服务命令的确只需要运行一次，需要谨慎设定这里
@@ -21,17 +21,13 @@ start_service() {
     procd_set_param stdout 1 # 转发 stdout 输出到 logd
     procd_set_param stderr 1 # same for stderr
     procd_set_param user root # 以 nobody 用户运行服务
-    procd_set_param pidfile /var/run/v2ray.pid # 在服务启动时写入一个 pid 文件，在停止服务时删除此 pid 文件
+    procd_set_param pidfile /var/run/xray.pid # 在服务启动时写入一个 pid 文件，在停止服务时删除此 pid 文件
     procd_close_instance # 结束服务实例配置
 }
 stop_service() {
-    ps | grep v2ray | grep -v grep | awk '{print $1}' | xargs kill -9
+    ps | grep xray | grep -v grep | awk '{print $1}' | xargs kill -9
 }
 restart_service() {
     stop
     start
 }
-
-
-# 下面是配置
-/etc/init.d/frp enable

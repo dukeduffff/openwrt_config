@@ -18,3 +18,8 @@ sleep 6m && sysctl -w vm.swappiness=1
 synocommunity社区: https://packages.synocommunity.com/
 我不是旷神: https://spk7.imnks.com/
 ```
+
+
+## pve挂载视频分区
+mount -t cifs //192.168.31.3/media /root/jellyfin -o username=duke,nobrl
+mount -t cifs //192.168.31.3/download /root/media -o username=duke,nobrl

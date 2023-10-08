@@ -78,7 +78,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "upload.yunzhongzhuan.com",
+            "address": "v4.cfnode.eu.org",
             "users": [
               {
                 "encryption": "none",
@@ -108,7 +108,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "upload.yunzhongzhuan.com",
+            "address": "www.cntest2022.cf",
             "users": [
               {
                 "encryption": "none",
@@ -143,7 +143,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "v4.cfnode.eu.org",
+            "address": "free.cntest2022.cf",
             "port": 443,
             "users": [
               {
@@ -156,6 +156,80 @@
         ]
       },
       "tag": "proxy_cf"
+    },
+    {
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "iKmGbcfwI7oDOuKWLxKYVCunTCvcw40cQiXPfESJ9lI=",
+        "address": [
+          "172.16.0.2/32",
+          "2606:4700:110:8fe9:68c2:f382:68f0:644a/128"
+        ],
+        "peers": [
+          {
+            "endpoint": "engage.cloudflareclient.com:2408",
+            "publicKey": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
+          }
+        ],
+        "mtu": 1420
+      },
+      "tag": "proxy_wireguard"
+    },
+    {
+      "protocol": "vmess",
+      "mux": {
+        "enabled": true,
+        "concurrency": 100
+      },
+      "settings": {
+        "vnext": [
+          {
+            "address": "wv.cntest2022.cf",
+            "port": 443,
+            "users": [
+              {
+                "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "wsSettings": {
+          "path": "/ray"
+        }
+      },
+      "tag": "proxy_vmess"
+    },
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "mq.cntest2022.cf",
+            "port": 443,
+            "users": [
+              {
+                "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "quic",
+        "security": "tls",
+        "quicSettings": {
+          "security": "none",
+          "key": "",
+          "header": {
+            "type": "utp"
+          }
+        }
+      },
+      "tag": "proxy_quic"
     },
     {
       "tag": "direct",
@@ -183,27 +257,15 @@
         }
       },
       "proxySettings": {
-        "tag": "proxy_grpc"
+        "tag": "proxy_vmess"
       }
-    },
-    {
-      "protocol": "freedom",
-      "streamSettings": {
-        "sockopt": {
-          "mark": 255
-        }
-      },
-      "settings": {
-        "domainStrategy": "UseIPv4"
-      },
-      "sendThrough": "172.16.0.2",
-      "tag": "wgcf"
     }
   ],
   "dns": {
     "hosts": {
       "dns.google": "8.8.8.8",
-      "domain:cntest2022.cf": "v4.cfnode.eu.org"
+      "domain:cntest2022.cf": "v4.cfnode.eu.org",
+      "domain:kernels.bid": "v4.cfnode.eu.org"
     },
     "servers": [
       {
@@ -213,7 +275,7 @@
         ]
       },
       {
-        "address": "fakedns",
+        "address": "https+local://[2606:4700:4700::1111]/dns-query",
         "domains": [
           "geosite:gfw"
         ],
@@ -234,12 +296,12 @@
       {
         "type": "field",
         "inboundTag": "in",
-        "outboundTag": "proxy_grpc"
+        "outboundTag": "proxy_vmess"
       },
       {
         "type": "field",
         "inboundTag": "dns_inbound",
-        "outboundTag": "proxy_grpc"
+        "outboundTag": "proxy_vmess"
       },
       {
         "type": "field",
@@ -258,7 +320,7 @@
       {
         "type": "field",
         "inboundTag": "remote_in",
-        "outboundTag": "proxy_grpc"
+        "outboundTag": "proxy_vmess"
       }
     ]
   },

@@ -1,0 +1,31 @@
+# 参考https://guide.v2fly.org/advanced/h2_tls_web.html#v2ray
+# 为什么http2不能回源 https://github.com/XTLS/Xray-core/issues/1750
+log {
+        output file /root/caddy/access.log
+    }
+
+
+
+:2016 {
+    root * /root/
+    file_server browse
+}
+:443 {
+    
+    tls /root/caddy/cntest.pem /root/caddy/cntest.key	
+    reverse_proxy /home http://localhost:8083 {
+        transport http {
+            read_buffer 1m
+            write_buffer 1m
+            versions h2c
+        }
+    }
+    reverse_proxy /grpc/* http://localhost:8082 {
+        transport http {
+            read_buffer 1m
+            write_buffer 1m
+            versions h2c
+        }
+    }
+    reverse_proxy /* http://localhost:2016
+}

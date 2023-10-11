@@ -1,0 +1,160 @@
+{
+    "log": {
+        "loglevel": "warning",
+        "access": "none",
+        "error": "/root/v2ray/error.log"
+    },
+    "inbounds": [
+        {
+            "port": 8080,
+            "listen": "127.0.0.1",
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                        "level": 0,
+                        "email": "dujian0327@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "security": "none",
+                "wsSettings": {
+                    "path": "/home"
+                }
+            }
+        },
+        {
+            "port": 8081,
+            "listen": "127.0.0.1",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                        "level": 0,
+                        "email": "dujian0327@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "ws",
+                "wsSettings": {
+                    "path": "/ray"
+                }
+            }
+        },
+        {
+            "port": 8082,
+            "listen": "127.0.0.1",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                        "level": 0,
+                        "email": "dujian0327@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "security": "none",
+                "grpcSettings": {
+                    "serviceName": "grpc"
+                }
+            }
+        },
+        {
+            "port": 8083,
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                        "level": 0,
+                        "email": "dujian0327@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "h2",
+                "security": "none",
+                "httpSettings": {
+                    "path": "/home",
+                    "host": [
+                        "wv.cntest2022.cf"
+                    ]
+                }
+            }
+        },
+        {
+            "port": 443,
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+                        "level": 0,
+                        "email": "dujian0327@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "security": "tls",
+            "streamSettings": {
+                "network": "grpc",
+                "security": "none",
+                "grpcSettings": {
+                    "serviceName": "grpc"
+                }
+            },
+            "tlsSettings": {
+                "serverName": "www.cntest2022.cf",
+                "certificates": [
+                    {
+                        "certificateFile": "/root/caddy/cntest.pem",
+                        "keyFile": "/root/caddy/cntest.key"
+                    }
+                ]
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom"
+        },
+        {
+            "protocol": "freedom",
+            "streamSettings": {
+                "sockopt": {
+                    "tcpFastOpen": true,
+                    "interface": "wgcf"
+                }
+            },
+            "settings": {
+                "domainStrategy": "AsIs"
+            },
+            "tag": "wgcf-ipv6"
+        }
+    ],
+    "routing": {
+        "domainStrategy": "AsIs",
+        "rules": [
+            {
+                "type": "field",
+                "domains": [
+                    "geosite:google",
+                    "domain:imgur.com"
+                ],
+                "outboundTag": "wgcf-ipv6"
+            }
+        ]
+    }
+}

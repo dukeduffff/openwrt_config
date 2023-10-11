@@ -44,10 +44,6 @@ cp /root/passwall/gfwlist.conf /tmp/dnsmasq.d/
 
 /etc/init.d/dnsmasq restart
 
-ip route add default via 172.16.0.2 dev wgcf table 100
-ip rule add fwmark 0xff table 100
-
-# ipset create gfwlist_dynamic hash:ip timeout 3600 hashsize 10000 maxelem 10000
 ipset create gfwlist hash:net timeout 3600 hashsize 10000 maxelem 100000
 # ipset add gfwlist 198.18.0.0/15
 ipset add gfwlist 91.108.4.0/22 timeout 0
@@ -91,6 +87,9 @@ ip6tables -t nat -A V2RAY_MASK6 -j RETURN -m mark --mark 0xff
 ip6tables -t nat -A V2RAY_MASK6 -p tcp -m set --match-set gfwlist6 dst -j REDIRECT --to-port 1070
 ip6tables -t nat -A OUTPUT -j V2RAY_MASK6
 
+/etc/init.d/ddns restart
+/etc/init.d/nlbwmon restart
+
 ```
 
 ### 3. 小米路由器旁路由配置
@@ -121,4 +120,8 @@ https://blog.misaka.rest/2023/03/12/cf-warp-yxip/
 
 workers创建vless协议
 https://jdssl.top/index.php/2023/07/21/2023vpn/?__cf_chl_tk=5b2rH74paFlUZYNMmBiBRT515ghCbt7DgdtGGjYzoOg-1693450307-0-gaNycGzNCvs
+```
+
+### gfw定时更新
+```
 ```

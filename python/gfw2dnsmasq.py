@@ -141,7 +141,7 @@ def ping_shell(host, cnt):
 
 def get_cfnode_hosts():
     hosts = []
-    res = requests.get("https://cfnode.eu.org/api/ajax/get_opt_v4")
+    res = requests.get("https://cfnode.eu.org/api/ajax/get_opt_v4", timeout=10)
     if res.status_code != 200:
         return hosts
     res_json = res.json()
@@ -174,6 +174,8 @@ def chose_best_host(domains=None):
     else:
         for domain in domains:
             hosts.extend(get_domain_ip_v4(domain))
+    if not hosts:
+        return None
     hosts.sort(key=lambda a: a.score)
     return hosts[0].host
 

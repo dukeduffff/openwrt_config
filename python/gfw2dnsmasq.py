@@ -8,6 +8,7 @@
 # https://gist.github.com/lanceliao/85cd3fcf1303dba2498c
 import datetime
 import sys
+import typing
 
 import requests
 
@@ -123,8 +124,8 @@ def ping_shell(host, cnt):
     ping_output = ping_output.decode('utf-8')
 
     # 解析ping结果，获取平均延迟和丢包率
-    avg_time = None
-    loss_rate = None
+    avg_time = 1000
+    loss_rate = 1.00
     avg_time_match1 = re.search(r'min/avg/max/mdev = [\d.]+/([\d.]+)/', ping_output)
     avg_time_match2 = re.search(r'min/avg/max = [\d.]+/([\d.]+)/', ping_output)
     loss_rate_match = re.search(r'(\d+)% packet loss', ping_output)
@@ -140,8 +141,11 @@ def ping_shell(host, cnt):
 
 
 def get_cfnode_hosts():
-    hosts = []
-    res = requests.get("https://cfnode.eu.org/api/ajax/get_opt_v4", timeout=10)
+    hosts: typing.List[HostScore] = []
+    try:
+        res = requests.get("https://cfnode.eu.org/api/ajax/get_opt_v4", timeout=10)
+    except Exception:
+        return hosts
     if res.status_code != 200:
         return hosts
     res_json = res.json()
@@ -155,6 +159,8 @@ def get_cfnode_hosts():
         if loc != "广东移动":
             continue
         hosts.append(HostScore(host=address, speed=speed / 100))
+    # 添加默认比较稳定的机器
+    hosts.append(HostScore(host="172.67.171.3", speed=80))
     for host in hosts:
         avg, loss = ping_shell(host.host, 5)
         host.avg = avg

@@ -5,7 +5,7 @@ import base64
 def gen_config(outer_ip, outer_port, remarks):
     vmess_uri = f"none:1f8f05a1-1a29-4862-a91a-ecb2a4a5e272@{outer_ip}:{outer_port}"
     b64_vmess_uri = base64.b64encode(vmess_uri.encode("utf-8")).decode("utf-8")
-    vmess_url = f"vmess://{b64_vmess_uri}?remarks={remarks}&path=/home&obfs=none&tfo=1&mux=1&alterId=0"
+    vmess_url = f"vmess://{b64_vmess_uri}?remarks={remarks}&path=/home&obfs=none&tfo=1&mux=1&alterId=0&ps={remarks}"
     return vmess_url
 
 

@@ -105,12 +105,15 @@ class HostScore(object):
         return self.avg + self.loss_rate * 2000 + (100 - self.speed)
 
 
+ping_cnt = 15
+
+
 def get_domain_ip_v4(domain):
     hosts = dns_resolver(domain, A)
     hosts.append("172.67.171.3")
     scores = []
     for host in hosts:
-        avg, loss = ping_shell(host, 5)
+        avg, loss = ping_shell(host, ping_cnt)
         scores.append(HostScore(host, avg, loss))
     return scores
 
@@ -156,13 +159,13 @@ def get_cfnode_hosts():
         address = h.get("address", "")
         speed = h.get("speed", 0)
         loc = h.get("device_name", "")
-        if loc != "广东移动":
+        if "北京联通" not in loc:
             continue
         hosts.append(HostScore(host=address, speed=speed / 100))
     # 添加默认比较稳定的机器
-    hosts.append(HostScore(host="172.67.171.3", speed=80))
+    hosts.append(HostScore(host="172.67.171.3", speed=100))
     for host in hosts:
-        avg, loss = ping_shell(host.host, 5)
+        avg, loss = ping_shell(host.host, ping_cnt)
         host.avg = avg
         host.loss_rate = loss
     return hosts
@@ -230,6 +233,7 @@ server=/369369.xyz/127.0.0.1#5153
 ipset=/369369.xyz/gfwlist
 server=/69shu.com/127.0.0.1#5153
 ipset=/69shu.com/gfwlist\n""")
+    fs.close()
     print("generate gfwlist custom config success!")
 
 

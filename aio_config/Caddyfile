@@ -7,12 +7,12 @@ log {
 
 
 :2016 {
-    root * /root/
+    root * /root/caddy
     file_server browse
 }
 :443 {
-    
-    tls /root/caddy/cntest.pem /root/caddy/cntest.key	
+
+    tls /root/caddy/cntest.pem /root/caddy/cntest.key
     reverse_proxy /home http://localhost:8083 {
         transport http {
             read_buffer 1m
@@ -27,5 +27,5 @@ log {
             versions h2c
         }
     }
-    reverse_proxy /* http://localhost:2016
+    reverse_proxy / http://localhost:2016
 }

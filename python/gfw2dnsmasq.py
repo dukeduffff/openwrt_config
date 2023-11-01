@@ -159,7 +159,7 @@ def get_cfnode_hosts():
         address = h.get("address", "")
         speed = h.get("speed", 0)
         loc = h.get("device_name", "")
-        if "北京联通" not in loc:
+        if "广东移动" not in loc:
             continue
         hosts.append(HostScore(host=address, speed=speed / 100))
     # 添加默认比较稳定的机器

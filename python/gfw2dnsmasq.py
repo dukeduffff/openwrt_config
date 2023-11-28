@@ -113,8 +113,7 @@ def get_domain_ip_v4(domain):
     hosts.append("172.67.171.3")
     scores = []
     for host in hosts:
-        avg, loss = ping_shell(host, ping_cnt)
-        scores.append(HostScore(host, avg, loss))
+        scores.append(HostScore(host, speed=60))
     return scores
 
 
@@ -143,9 +142,24 @@ def ping_shell(host, cnt):
     return avg_time, loss_rate
 
 
-def get_cfnode_hosts():
-    hosts: typing.List[HostScore] = []
+def get_cfnode_hosts(get_remote=True):
+    # 生成默认比较稳定的机器
+    hosts: typing.List[HostScore] = [
+        HostScore(host="172.67.171.3", speed=100),
+        HostScore(host="104.16.14.169", speed=100),
+        HostScore(host="172.67.72.203", speed=100),
+        HostScore(host="172.67.179.216", speed=100),
+        HostScore(host="172.67.5.233", speed=60)  # 香港节点
+    ]
+    if not get_remote:
+        return hosts
     try:
+        """
+        172.67.179.216
+        172.67.5.233
+        64.68.192.42
+        172.67.72.203
+        """
         res = requests.get("https://cfnode.eu.org/api/ajax/get_opt_v4", timeout=10)
     except Exception:
         return hosts
@@ -162,12 +176,6 @@ def get_cfnode_hosts():
         if "广东移动" not in loc:
             continue
         hosts.append(HostScore(host=address, speed=speed / 100))
-    # 添加默认比较稳定的机器
-    hosts.append(HostScore(host="172.67.171.3", speed=100))
-    for host in hosts:
-        avg, loss = ping_shell(host.host, ping_cnt)
-        host.avg = avg
-        host.loss_rate = loss
     return hosts
 
 
@@ -179,12 +187,17 @@ def chose_best_host(domains=None):
     # 其他时间选择domains的时间最快的ip
     hosts = []
     if not domains:
-        hosts.extend(get_cfnode_hosts())
+        hosts.extend(get_cfnode_hosts(get_remote=False))
     else:
         for domain in domains:
             hosts.extend(get_domain_ip_v4(domain))
     if not hosts:
         return None
+    # ping的方式选择最优
+    for host in hosts:
+        avg, loss = ping_shell(host.host, ping_cnt)
+        host.avg = avg
+        host.loss_rate = loss
     hosts.sort(key=lambda a: a.score)
     return hosts[0].host
 

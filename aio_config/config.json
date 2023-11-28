@@ -96,8 +96,7 @@
       "streamSettings": {
         "grpcSettings": {
           "serviceName": "grpc",
-          "multiMode": true,
-          "initial_windows_size": 65536
+          "multiMode": false
         },
         "tlsSettings": {
           "allowInsecure": false,
@@ -267,9 +266,7 @@
   ],
   "dns": {
     "hosts": {
-      "dns.google": "8.8.8.8",
-      "domain:cntest2022.cf": "v4.cfnode.eu.org",
-      "domain:kernels.bid": "v4.cfnode.eu.org"
+      "dns.google": "8.8.8.8"
     },
     "servers": [
       {
@@ -279,7 +276,7 @@
         ]
       },
       {
-        "address": "https+local://[2606:4700:4700::1111]/dns-query",
+        "address": "fakedns",
         "domains": [
           "geosite:gfw"
         ],

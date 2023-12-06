@@ -1,0 +1,52 @@
+:2016 {
+    root * /root/caddy
+    file_server browse
+}
+:443 {
+    log {
+	output discard
+    }
+    tls /root/caddy/cntest.pem /root/caddy/cntest.key
+    reverse_proxy /home http://localhost:8083 {
+        transport http {
+            read_buffer 1m
+            write_buffer 1m
+            versions h2c
+        }
+    }
+    reverse_proxy /grpc/* http://localhost:8082 {
+        transport http {
+            read_buffer 1m
+            write_buffer 1m
+            versions h2c
+        }
+    }
+    reverse_proxy / http://localhost:2016
+}
+
+:15210 {
+    log {
+	output discard
+    }
+    tls /root/caddy/cntest.pem /root/caddy/cntest.key
+    reverse_proxy /home http://localhost:8083 {
+        transport http {
+            read_buffer 1m
+            write_buffer 1m
+            versions h2c
+        }
+    }
+    reverse_proxy /grpc/* http://localhost:8082 {
+        transport http {
+            read_buffer 1m
+            write_buffer 1m
+            versions h2c
+        }
+    }
+    reverse_proxy https://halo.cntest2022.cf {
+	header_up Host halo.cntest2022.cf
+    	header_up X-Real-IP {remote_host}
+    	header_up X-Forwarded-For {remote}
+    	header_up X-Forwarded-Proto {scheme}
+    }
+}

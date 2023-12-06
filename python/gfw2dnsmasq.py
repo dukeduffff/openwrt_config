@@ -146,21 +146,14 @@ def get_cfnode_hosts(get_remote=True):
     # 生成默认比较稳定的机器
     hosts: typing.List[HostScore] = [
         HostScore(host="172.67.171.3", speed=100),
-        HostScore(host="104.16.14.169", speed=100),
-        HostScore(host="172.67.72.203", speed=100),
-        HostScore(host="172.67.179.216", speed=100),
-        HostScore(host="172.67.5.233", speed=60)  # 香港节点
+        # HostScore(host="104.16.14.169", speed=100),
+        # HostScore(host="172.64.80.1", speed=100),
+        # HostScore(host="172.67.5.233", speed=60)  # 香港节点
     ]
     if not get_remote:
         return hosts
     try:
-        """
-        172.67.179.216
-        172.67.5.233
-        64.68.192.42
-        172.67.72.203
-        """
-        res = requests.get("https://cfnode.eu.org/api/ajax/get_opt_v4", timeout=10)
+        res = requests.get("https://monitor.gacjie.cn/api/client/get_ip_address", timeout=10)
     except Exception:
         return hosts
     if res.status_code != 200:
@@ -168,38 +161,63 @@ def get_cfnode_hosts(get_remote=True):
     res_json = res.json()
     if not res_json.get("status", False):
         return hosts
-    res_list = res_json.get("data", [])
+    res_list = res_json.get("info", {}).get("CM")
     for h in res_list:
-        address = h.get("address", "")
-        speed = h.get("speed", 0)
-        loc = h.get("device_name", "")
-        if "广东移动" not in loc:
+        address = h.get("ip", "")
+        if not address:
             continue
-        hosts.append(HostScore(host=address, speed=speed / 100))
+        hosts.append(HostScore(host=address, speed=100))
     return hosts
 
 
-def chose_best_host(domains=None):
+def get_ipv6_cfnode_hosts():
+    hosts: typing.List[HostScore] = []
+    try:
+        res = requests.get("https://monitor.gacjie.cn/api/ajax/get_cloud_flare_v6?page=1&limit=100", timeout=10)
+    except Exception:
+        return hosts
+    if res.status_code != 200:
+        return hosts
+    res_json = res.json()
+    if not res_json.get("status", False):
+        return hosts
+    ips = res_json.get("data", [])
+    for ip in ips:
+        if ip.get("device_name") != "山东移动":
+            continue
+        hosts.append(HostScore(
+            host=ip.get("address"),
+            speed=ip.get("speed", 0) / 100
+        ))
+    return hosts
+
+
+def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[typing.Union[HostScore, None], bool]:
     hour = datetime.datetime.now().hour
     # 每天18点到次日凌晨1点,使用该ip,目前测试下来最快的
     # if hour >= 18 or hour <= 1:
     #     return "172.67.171.3"
     # 其他时间选择domains的时间最快的ip
-    hosts = []
-    if not domains:
-        hosts.extend(get_cfnode_hosts(get_remote=False))
-    else:
-        for domain in domains:
-            hosts.extend(get_domain_ip_v4(domain))
+    hosts: typing.List[HostScore] = []
+    is_ipv6 = False
+    if ipv6:
+        hosts.extend(get_ipv6_cfnode_hosts())
+        is_ipv6 = True if hosts else False
+    elif not hosts:
+        if not domains:
+            hosts.extend(get_cfnode_hosts())
+        else:
+            for domain in domains:
+                hosts.extend(get_domain_ip_v4(domain))
     if not hosts:
-        return None
+        return None, is_ipv6
     # ping的方式选择最优
     for host in hosts:
         avg, loss = ping_shell(host.host, ping_cnt)
         host.avg = avg
         host.loss_rate = loss
     hosts.sort(key=lambda a: a.score)
-    return hosts[0].host
+    return hosts[0].host, is_ipv6
 
 
 A = 1
@@ -230,11 +248,10 @@ def custom_gfw_to_conf():
     fs.write("""
 # gfw server\n""")
     # 写入出国最优ip
-    best_host = chose_best_host()
-    if not best_host:
-        best_host = "172.67.171.3"
-    fs.write(f"address=/cntest2022.cf/{best_host}\n")
-    fs.write(f"address=/cntest2022.cf/::\n")  # 禁止ipv6解析
+    chose_ipv6 = True
+    best_host, is_ipv6 = chose_best_host(ipv6=chose_ipv6)
+    fs.write(f"address=/cntest2022.cf/{'0.0.0.0' if is_ipv6 else best_host}\n")
+    fs.write(f"address=/cntest2022.cf/{best_host if is_ipv6 else '::'}\n")  # 禁止ipv6解析
     fs.write("""
 
 # gfw custom

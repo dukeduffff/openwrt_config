@@ -192,7 +192,7 @@ def get_ipv6_cfnode_hosts():
     return hosts
 
 
-def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[typing.Union[HostScore, None], bool]:
+def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[str, bool]:
     hour = datetime.datetime.now().hour
     # 每天18点到次日凌晨1点,使用该ip,目前测试下来最快的
     # if hour >= 18 or hour <= 1:
@@ -209,15 +209,17 @@ def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[typing.Union[HostS
         else:
             for domain in domains:
                 hosts.extend(get_domain_ip_v4(domain))
+    # 若为空必须返回一个值
     if not hosts:
-        return None, is_ipv6
+        return "172.67.171.3", False
     # ping的方式选择最优
     for host in hosts:
         avg, loss = ping_shell(host.host, ping_cnt)
         host.avg = avg
         host.loss_rate = loss
     hosts.sort(key=lambda a: a.score)
-    return hosts[0].host, is_ipv6
+    best_host = hosts[0].host if hosts[0].host else "172.67.171.3"
+    return best_host, is_ipv6
 
 
 A = 1
@@ -253,16 +255,20 @@ def custom_gfw_to_conf():
     fs.write(f"address=/cntest2022.cf/{'0.0.0.0' if is_ipv6 else best_host}\n")
     fs.write(f"address=/cntest2022.cf/{best_host if is_ipv6 else '::'}\n")  # 禁止ipv6解析
     fs.write("""
+# gfw dns
+server=/monitor.gacjie.cn/127.0.0.1#5153
 
 # gfw custom
 server=/supes.top/127.0.0.1#5153
-ipset=/supes.top/gfwlist
+ipset=/supes.top/gfwlist,gfwlist6
 server=/openwrt.ai/127.0.0.1#5153
-ipset=/openwrt.ai/gfwlist
+ipset=/openwrt.ai/gfwlist,gfwlist6
 server=/369369.xyz/127.0.0.1#5153
-ipset=/369369.xyz/gfwlist
+ipset=/369369.xyz/gfwlist,gfwlist6
+server=/adguard.com/127.0.0.1#5153
+ipset=/adguard.com/gfwlist,gfwlist6
 server=/69shu.com/127.0.0.1#5153
-ipset=/69shu.com/gfwlist\n""")
+ipset=/69shu.com/gfwlist,gfwlist6\n""")
     fs.close()
     print("generate gfwlist custom config success!")
 

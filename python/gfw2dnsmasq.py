@@ -105,7 +105,7 @@ class HostScore(object):
         return self.avg + self.loss_rate * 2000 + (100 - self.speed)
 
 
-ping_cnt = 15
+ping_cnt = 10
 
 
 def get_domain_ip_v4(domain):
@@ -138,6 +138,37 @@ def ping_shell(host, cnt):
         avg_time = float(avg_time_match2.group(1))
     if loss_rate_match:
         loss_rate = float(loss_rate_match.group(1))
+
+    return avg_time, loss_rate
+
+
+def tcping_shell(host, cnt, port=443):
+    # github开源地址
+    import subprocess
+    import re
+    if ":" in host:
+        host = f"[{host}]"
+    ping_command = ['/root/tcping/tcping', '-c', f"{cnt}", host, f"{port}"]
+    ping_process = subprocess.Popen(ping_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ping_output, ping_error = ping_process.communicate()
+    ping_output = ping_output.decode('utf-8')
+
+    # 解析ping结果，获取平均延迟和丢包率
+    avg_time = 1000
+    success_match_cnt = 1
+    fail_match_cnt = 0
+    # 获取成功次数和失败次数
+    success_match = re.search(r"(\d+) successful", ping_output)
+    failure_match = re.search(r"(\d+) failed", ping_output)
+    average_match = re.search(r"Average = (\d+)\.\d+ms", ping_output)
+
+    if success_match:
+        success_match_cnt = float(success_match.group(1))
+    if failure_match:
+        fail_match_cnt = float(failure_match.group(1))
+    if average_match:
+        avg_time = float(average_match.group(1))
+    loss_rate = fail_match_cnt / (fail_match_cnt + success_match_cnt)
 
     return avg_time, loss_rate
 
@@ -218,6 +249,26 @@ def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[str, bool]:
     return best_host, is_ipv6
 
 
+def chose_best_hosts_both_46() -> typing.Tuple[str, bool]:
+    hosts: typing.List[HostScore] = []
+    hosts.extend(get_ipv4_cfnode_hosts())
+    for host in hosts:
+        host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
+    hosts = [host for host in hosts if host.loss_rate < 0.2]
+    if hosts:
+        hosts.sort(key=lambda a: a.score)
+        return hosts[0].host, False
+    # 读取ipv6
+    hosts.extend(get_ipv6_cfnode_hosts())
+    for host in hosts:
+        host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
+    hosts = [host for host in hosts if host.loss_rate < 0.2]
+    if hosts:
+        hosts.sort(key=lambda a: a.score)
+        return hosts[0].host, True
+    return "172.67.171.3", False
+
+
 A = 1
 AAAA = 28
 
@@ -240,13 +291,15 @@ def dns_resolver(domain, ip_type=A):
     return hosts
 
 
-def replace_template(from_dir, to_dir, chose_ipv6, url):
+def replace_template(from_dir, to_dir, chose_ipv6, url, tcping):
     minute = datetime.now().minute
     if minute % 10 != 0:
         if url and check_gfw(url=url):
             exit(0)
-
-    best_host, is_ipv6 = chose_best_host(ipv6=chose_ipv6)
+    if not tcping:
+        best_host, is_ipv6 = chose_best_host(ipv6=chose_ipv6)
+    else:
+        best_host, is_ipv6 = chose_best_hosts_both_46()
     lines = open(from_dir, "r")
     to_file = open(to_dir, "w")
     for line in lines:
@@ -291,6 +344,7 @@ def parse_args():
     parser.add_argument("-tpl", "--template", help="模版路径, only for xray")
     parser.add_argument("-td", "--target", help="配置写入路径, only for xray")
     parser.add_argument("-6", "--ipv6", action="store_true", help="生成ipv6, 否则生成ipv4")
+    parser.add_argument("-t", "--tcping", action="store_true", help="使用是否tcping检测")
     parser.add_argument("-url", "--url", help="测试url, only for check")
 
     args = parser.parse_args()
@@ -300,7 +354,7 @@ def parse_args():
     elif args.type == "ipset_custom":
         custom_gfw_to_conf(args.ipv6)
     elif args.type == "xray":
-        replace_template(args.template, args.target, args.ipv6, args.url)
+        replace_template(args.template, args.target, args.ipv6, args.url, args.tcping)
 
 
 if __name__ == '__main__':

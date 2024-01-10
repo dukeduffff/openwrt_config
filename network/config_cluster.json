@@ -1,0 +1,87 @@
+{
+  "log": {
+    "error": "none",
+    "loglevel": "info",
+    "access": "none"
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": "1081",
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true,
+        "ip": "127.0.0.1"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "streamSettings": {
+        "grpcSettings": {
+          "serviceName": "grpc"
+        },
+        "tlsSettings": {
+          "allowInsecure": false,
+          "serverName": "www.cntest2022.cf"
+        },
+        "security": "tls",
+        "network": "grpc"
+      },
+      "tag": "proxy_grpc",
+      "settings": {
+        "vnext": [
+          {
+            "address": "{CF_IP}",
+            "users": [
+              {
+                "encryption": "none",
+                "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1",
+                "level": 0
+              }
+            ],
+            "port": 443
+          }
+        ]
+      }
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "AsIs",
+        "userLevel": 0
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "none"
+        }
+      }
+    }
+  ],
+  "routing": {
+    "balancers": [
+      {
+        "tag": "balancer",
+        "selector": [],
+        "strategy": {
+          "type": "random"
+        }
+      }
+    ],
+    "rules": [
+      {
+        "type": "field",
+        "network": "tcp,udp",
+        "balancerTag": "balancer"
+      }
+    ]
+  },
+  "transport": {}
+}

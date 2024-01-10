@@ -4,11 +4,11 @@ USE_PROCD=1
 START=95
 STOP=15
 #STOP_CMD="cat /var/run/xray.pid | xargs kill -9"
-START_CMD="/root/passwall/xray/xray run -config /root/passwall/xray/config.json"
+START_CMD="/root/passwall/xray/xray run -config /root/passwall/xray/config_cluster.json"
 
 start_service() {
     echo "start xray"
-    procd_open_instance self_xray # 给服务实例定义一个名称
+    procd_open_instance xray_cluster # 给服务实例定义一个名称
     procd_set_param command $START_CMD # 需要在前台被执行的服务
     # procd_append_param command -bar 42 # 给以上命令附加的指令参数
 
@@ -24,13 +24,13 @@ start_service() {
     procd_set_param stdout 1 # 转发 stdout 输出到 logd
     procd_set_param stderr 1 # same for stderr
     procd_set_param user root # 以 nobody 用户运行服务
-    procd_set_param pidfile /var/run/self_xray.pid # 在服务启动时写入一个 pid 文件，在停止服务时删除此 pid 文件
+    procd_set_param pidfile /var/run/xray_cluster.pid # 在服务启动时写入一个 pid 文件，在停止服务时删除此 pid 文件
     procd_close_instance # 结束服务实例配置
 }
 
 stop_service() {
     echo "stop xray"
-    cat /var/run/self_xray.pid | xargs kill -9
+    cat /var/run/xray_cluster.pid | xargs kill -9
 }
 
 restart_service() {

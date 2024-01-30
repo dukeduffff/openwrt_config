@@ -1,0 +1,79 @@
+log:
+  level: error
+  file: "/var/log/mosdns.log"
+
+# API 入口设置
+api:
+  http: "0.0.0.0:9091"
+
+plugins:
+  # 缓存
+  - tag: cache
+    type: cache
+    args:
+      size: 10000
+      lazy_cache_ttl: 30
+
+  # 转发至国内DNS，并发查询
+  - tag: forward_local
+    type: forward
+    args:
+      concurrent: 2
+      upstreams:
+        - addr: udp://1.1.1.1:53
+        - addr: udp://1.0.0.1:53
+
+  # 转发至国外DNS，并发查询
+  - tag: forward_remote
+    type: forward
+    args:
+      concurrent: 2
+      upstreams:
+        - addr: tls://2606:4700:4700::1111
+          enable_pipeline: true
+          enable_http3: false
+          so_mark: 255
+        - addr: tls://2606:4700:4700::1001
+          enable_pipeline: true
+          enable_http3: false
+          so_mark: 255
+
+  # 自定义hosts
+  - tag: hosts
+    type: hosts
+    args:
+      entries:
+        - "domain:cntest2022.cf 172.67.171.3"
+
+  # 主运行序列
+  - tag: main_sequence
+    type: sequence
+    args:
+      - exec: $hosts
+      - matches: has_resp
+        exec: accept
+
+      # 缓存逻辑
+      - exec: $cache
+      - matches: has_resp
+        exec: accept
+
+      - exec: $forward_local
+      - exec: prefer_ipv4
+      - exec: accept
+
+#      - exec: $fallback
+
+
+  # 启动监听服务
+  - tag: udp_server
+    type: udp_server
+    args:
+      entry: main_sequence
+      listen: :53
+
+  - tag: tcp_server
+    type: tcp_server
+    args:
+      entry: main_sequence
+      listen: :53

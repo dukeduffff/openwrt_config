@@ -108,12 +108,15 @@ class HostScore(object):
 ping_cnt = 10
 
 
-def get_domain_ip_v4(domain):
+def get_domain_ip_v4(domain, with_ipv6=False):
     hosts = dns_resolver(domain, A)
-    hosts.append("172.67.171.3")
     scores = []
     for host in hosts:
         scores.append(HostScore(host, speed=60))
+    if with_ipv6:
+        hosts = dns_resolver(domain, AAAA)
+        for host in hosts:
+            scores.append(HostScore(host, speed=60))
     return scores
 
 
@@ -269,6 +272,20 @@ def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[str, bool]:
     return best_host, is_ipv6
 
 
+def get_one_best_host_tcping(func: typing.Callable, **kwargs) -> typing.Tuple[str, bool]:
+    if not kwargs:
+        hosts = func()
+    else:
+        hosts = func(**kwargs)
+    for host in hosts:
+        host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
+    hosts = [host for host in hosts if host.loss_rate < 0.2 and host.avg < 200]
+    if hosts:
+        hosts.sort(key=lambda a: a.score)
+        return hosts[0].host, ":" in hosts[0].host
+    return "", False
+
+
 def chose_best_hosts_both_46() -> typing.Tuple[str, bool]:
     hosts: typing.List[HostScore] = []
     hour = datetime.now().hour
@@ -282,23 +299,20 @@ def chose_best_hosts_both_46() -> typing.Tuple[str, bool]:
     # if hosts:
     #     hosts.sort(key=lambda a: a.score)
     #     return hosts[0].host, False
-    if 1 < hour < 19:
+    # 1. 尝试获取接口数据
+    if hour < 18 or hour > 19:
         # 这个时间段内尝试使用ipv4
-        hosts.extend(get_ipv4_cfnode_hosts())
-    for host in hosts:
-        host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
-    hosts = [host for host in hosts if host.loss_rate < 0.2 and host.avg < 200]
-    if hosts:
-        hosts.sort(key=lambda a: a.score)
-        return hosts[0].host, False
-    # 读取ipv6
-    hosts.extend(get_ipv6_cfnode_hosts())
-    for host in hosts:
-        host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
-    hosts = [host for host in hosts if host.loss_rate < 0.2]
-    if hosts:
-        hosts.sort(key=lambda a: a.score)
-        return hosts[0].host, True
+        host, is_ipv6 = get_one_best_host_tcping(get_ipv4_cfnode_hosts)
+        if host:
+            return host, is_ipv6
+    # 2. 读取ipv6
+    host, is_ipv6 = get_one_best_host_tcping(get_ipv6_cfnode_hosts)
+    if host:
+        return host, is_ipv6
+    # 3. 走dns查询
+    host, is_ipv6 = get_one_best_host_tcping(get_domain_ip_v4, domain="cloudflare.cfgo.cc")
+    if host:
+        return host, is_ipv6
     return "172.67.171.3", False
 
 

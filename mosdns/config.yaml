@@ -57,15 +57,20 @@ plugins:
     type: ip_set
     args:
       ips:
-        - "0.0.0.0"  # adguard返回的广告ip, 但是污染的域名同样可能返回这个ip, 发生问题时自己排查
+        - "0.0.0.0/8"  # adguard返回的广告ip, 但是污染的域名同样可能返回这个ip, 发生问题时自己排查
         - "::"
-        - "127.0.0.1/32"
+        - "127.0.0.1/8"
         - "::1/128"
         - "10.0.0.0/8"  # 本地网段, 不需要走代理
+        - "100.64.0.0/10"
+        - "169.254.0.0/16"
         - "172.16.0.0/12"
         - "192.168.0.0/16"
         - "255.255.255.255/32"
         - "3.132.228.0/24"  # nat map ip
+        - "fe80::/10"
+        - "fc00::/7"
+        - "fec0::/10"
         - "2600:1f16:8c5:101::/64"
       files:
         - "/var/mosdns/geoip_cn.txt"
@@ -76,6 +81,13 @@ plugins:
     args:
       files:
 #        - "/var/mosdns/geosite_geolocation-!cn.txt"
+        - "/root/passwall/proxy_list.txt"
+
+  # gfw域名
+  - tag: geosite_gfw
+    type: domain_set
+    args:
+      files:
         - "/root/passwall/proxy_list.txt"
 
   # fallback的primary服务器,返回非国内ip则drop_resp
@@ -140,7 +152,7 @@ plugins:
         exec: reject 3
 
       # fakedns逻辑
-      - matches: qname $geosite_no_cn
+      - matches: qname $geosite_gfw
         exec: forward udp://127.0.0.1:5153
       - matches: has_resp
         exec: accept
@@ -162,7 +174,7 @@ plugins:
       # adguard上游
       - exec: $adguard_sequence
 
-      - exec: $fallback
+#      - exec: $fallback
 
 
   # 启动监听服务

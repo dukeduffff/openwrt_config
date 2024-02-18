@@ -12,6 +12,7 @@ import typing
 from datetime import datetime
 
 import requests
+import dns.resolver
 
 mydnsip = '127.0.0.1'
 mydnsport = '5153'
@@ -24,6 +25,8 @@ baseurl = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'
 comment_pattern = '^\!|\[|^@@|^\d+\.\d+\.\d+\.\d+'
 domain_pattern = '([\w\-\_]+\.[\w\.\-\_]+)[\/\*]*'
 gfw_url = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/gfw.txt"
+default_ipv4 = "172.67.3.3"
+self_domain = "327237.xyz"
 # do not write to router internal flash directly
 
 #
@@ -106,10 +109,36 @@ class HostScore(object):
 
 
 ping_cnt = 10
+A = 1
+AAAA = 28
 
 
-def get_domain_ip_v4(domain, with_ipv6=False):
-    hosts = dns_resolver(domain, A)
+def dns_resolver(domain, ip_type=A):
+    response = requests.get(f"https://dns.alidns.com/resolve?name={domain}&type={ip_type}")
+    if response.status_code != 200:
+        print(response.text)
+    dns_res = response.json()
+    status = dns_res.get("Status")
+    if status != 0:
+        print(response.text)
+    ans_list = dns_res.get("Answer")
+    hosts = []
+    for ans in ans_list:
+        ip = ans.get("data")
+        if not ip:
+            continue
+        hosts.append(ip)
+    return hosts
+
+
+def sys_dns_resolver(domain, ip_type=A):
+    resp = dns.resolver.resolve(domain, "A" if ip_type == A else "AAAA")
+    hosts = [r.address for r in resp]
+    return hosts
+
+
+def get_domain_ip_by_dns(domain, with_ipv6=False, dr=dns_resolver):
+    hosts = dr(domain, A)
     scores = []
     for host in hosts:
         scores.append(HostScore(host, speed=60))
@@ -258,17 +287,17 @@ def chose_best_host(domains=None, ipv6=False) -> typing.Tuple[str, bool]:
             hosts.extend(get_ipv4_cfnode_hosts())
         else:
             for domain in domains:
-                hosts.extend(get_domain_ip_v4(domain))
+                hosts.extend(get_domain_ip_by_dns(domain))
     # 若为空必须返回一个值
     if not hosts:
-        return "172.67.171.3", False
+        return default_ipv4, False
     # ping的方式选择最优
     for host in hosts:
         avg, loss = ping_shell(host.host, ping_cnt)
         host.avg = avg
         host.loss_rate = loss
     hosts.sort(key=lambda a: a.score)
-    best_host = hosts[0].host if hosts[0].host else "172.67.171.3"
+    best_host = hosts[0].host if hosts[0].host else default_ipv4
     return best_host, is_ipv6
 
 
@@ -278,6 +307,7 @@ def get_one_best_host_tcping(func: typing.Callable, **kwargs) -> typing.Tuple[st
     else:
         hosts = func(**kwargs)
     for host in hosts:
+        print(host.host)
         host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
     hosts = [host for host in hosts if host.loss_rate < 0.2 and host.avg < 200]
     if hosts:
@@ -300,42 +330,21 @@ def chose_best_hosts_both_46() -> typing.Tuple[str, bool]:
     #     hosts.sort(key=lambda a: a.score)
     #     return hosts[0].host, False
     # 1. 尝试获取接口数据
-    if hour < 18 or hour > 19:
-        # 这个时间段内尝试使用ipv4
-        host, is_ipv6 = get_one_best_host_tcping(get_ipv4_cfnode_hosts)
-        if host:
-            return host, is_ipv6
+    # if hour < 18 or hour > 19:
+    #     # 这个时间段内尝试使用ipv4
+    #     host, is_ipv6 = get_one_best_host_tcping(get_ipv4_cfnode_hosts)
+    #     if host:
+    #         return host, is_ipv6
     # 2. 读取ipv6
-    host, is_ipv6 = get_one_best_host_tcping(get_ipv6_cfnode_hosts)
-    if host:
-        return host, is_ipv6
+    # host, is_ipv6 = get_one_best_host_tcping(get_ipv6_cfnode_hosts)
+    # if host:
+    #     return host, is_ipv6
     # 3. 走dns查询
-    host, is_ipv6 = get_one_best_host_tcping(get_domain_ip_v4, domain="cloudflare.cfgo.cc")
+    host, is_ipv6 = get_one_best_host_tcping(get_domain_ip_by_dns, domain="cloudflare.cfgo.cc", with_ipv6=True,
+                                             dr=sys_dns_resolver)
     if host:
         return host, is_ipv6
-    return "172.67.171.3", False
-
-
-A = 1
-AAAA = 28
-
-
-def dns_resolver(domain, ip_type=A):
-    response = requests.get(f"https://dns.alidns.com/resolve?name={domain}&type={ip_type}")
-    if response.status_code != 200:
-        print(response.text)
-    dns_res = response.json()
-    status = dns_res.get("Status")
-    if status != 0:
-        print(response.text)
-    ans_list = dns_res.get("Answer")
-    hosts = []
-    for ans in ans_list:
-        ip = ans.get("data")
-        if not ip:
-            continue
-        hosts.append(ip)
-    return hosts
+    return default_ipv4, False
 
 
 def replace_template(from_dir, to_dir, chose_ipv6, url, tcping):
@@ -436,7 +445,7 @@ def update_domain(chose_ipv6, tcping):
         best_host, _ = chose_best_host(ipv6=chose_ipv6)
     else:
         best_host, _ = chose_best_hosts_both_46()
-    resp = requests.post(url, f"domain:cntest2022.cf {best_host}", timeout=10)
+    resp = requests.post(url, f"domain:{self_domain} {best_host}", timeout=10)
     print(resp.content)
 
 
@@ -463,7 +472,7 @@ def parse_args():
     elif args.type == "domain":
         update_domain(args.ipv6, args.tcping)
     elif args.type == "test":
-        update_domain(True, True)
+        print(sys_dns_resolver("cloudflare.cfgo.cc", A))
 
 
 if __name__ == '__main__':

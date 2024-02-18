@@ -42,7 +42,7 @@ plugins:
     type: hosts
     args:
       entries:
-        - "domain:cntest2022.cf 172.67.171.3"
+        - "domain:327237.xyz 172.67.3.3"
 
   # 国内域名
   - tag: geosite_cn
@@ -160,7 +160,7 @@ plugins:
 #        exec: goto gfw-list
 
       # 缓存逻辑
-      - matches: "!qname cntest2022.cf"
+      - matches: "!qname 327237.xyz"
         exec: $cache
       - matches: has_resp
         exec: accept

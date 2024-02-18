@@ -1,6 +1,6 @@
 {
   "log": {
-    "error": "none",
+    "error": "/root/passwall/error.log",
     "loglevel": "info",
     "access": "none"
   },
@@ -21,7 +21,7 @@
       "sniffing": {
         "enabled": true,
         "destOverride": [
-          "fakedns",
+	  "fakedns",
           "http",
           "tls"
         ]
@@ -64,12 +64,12 @@
         "wsSettings": {
           "path": "/home",
           "headers": {
-            "host": "cntest.duke2022.ga"
+            "host": "codecrafter.free.hr"
           }
         },
         "tlsSettings": {
           "allowInsecure": true,
-          "serverName": "cntest.duke2022.ga"
+          "serverName": "codecrafter.free.hr"
         },
         "security": "tls",
         "network": "ws"
@@ -97,20 +97,23 @@
         "grpcSettings": {
           "serviceName": "grpc",
           "multiMode": false,
-          "idle_timeout": 61
+		  "initial_windows_size": 0
         },
         "tlsSettings": {
           "allowInsecure": false,
-          "serverName": "www.cntest2022.cf"
+          "serverName": "www.327237.xyz"
         },
         "security": "tls",
-        "network": "grpc"
+        "network": "grpc",
+        "sockopt": {
+          "mark": 255
+        }
       },
       "tag": "proxy_grpc",
       "settings": {
         "vnext": [
           {
-            "address": "47.91.28.15",
+            "address": "www.327237.xyz",
             "users": [
               {
                 "encryption": "none",
@@ -129,13 +132,13 @@
         "network": "ws",
         "security": "tls",
         "tlsSettings": {
-          "serverName": "free.cntest2022.cf",
+          "serverName": "codecrafter.free.hr",
           "allowInsecure": false
         },
         "wsSettings": {
           "path": "/?ed=2048",
           "headers": {
-            "Host": "free.cntest2022.cf"
+            "Host": "codecrafter.free.hr"
           }
         },
         "sockopt": {
@@ -145,7 +148,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "free.cntest2022.cf",
+            "address": "codecrafter.free.hr",
             "port": 443,
             "users": [
               {
@@ -186,7 +189,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "wv.cntest2022.cf",
+            "address": "wv",
             "port": 443,
             "users": [
               {
@@ -204,36 +207,6 @@
         }
       },
       "tag": "proxy_vmess"
-    },
-    {
-      "protocol": "vmess",
-      "settings": {
-        "vnext": [
-          {
-            "address": "www.cntest2022.cf",
-            "port": 443,
-            "users": [
-              {
-                "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "h2",
-        "security": "tls",
-        "httpSettings": {
-          "path": "/home",
-          "host": [
-            "www.cntest2022.cf"
-          ]
-        },
-        "tlsSettings": {
-          "serverName": "www.cntest2022.cf"
-        }
-      },
-      "tag": "proxy_http2"
     },
     {
       "tag": "proxy_socks",
@@ -301,12 +274,12 @@
       {
         "type": "field",
         "inboundTag": "in",
-        "outboundTag": "proxy_socks"
+        "outboundTag": "proxy_grpc"
       },
       {
         "type": "field",
         "inboundTag": "dns_inbound",
-        "outboundTag": "proxy_socks"
+        "outboundTag": "proxy_grpc"
       },
       {
         "type": "field",
@@ -325,7 +298,7 @@
       {
         "type": "field",
         "inboundTag": "remote_in",
-        "outboundTag": "proxy_socks"
+        "outboundTag": "proxy_grpc"
       }
     ]
   },

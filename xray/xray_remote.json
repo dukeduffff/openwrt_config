@@ -1,0 +1,91 @@
+{
+    "log": {
+        "loglevel": "info",
+        "access": "/root/xray/access.log",
+        "error": "none"
+    },
+    "inbounds": [
+        {
+            "port": 8082,
+            "listen": "127.0.0.1",
+            "protocol": "vmess",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1",
+                        "level": 0,
+                        "email": "dujian0327@gmail.com"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "grpc",
+                "security": "none",
+                "grpcSettings": {
+                    "serviceName": "grpc"
+                }
+            }
+        }
+    ],
+    "outbounds": [
+	{
+            "protocol": "freedom",
+            "tag": "free",
+	    "sendThrough": "10.10.10.102",
+	    "domainStrategy": "UseIPv4v6"
+        },
+
+	{
+            "protocol": "wireguard",
+            "settings": {
+                "secretKey": "2P1E56Tnsi8R94AjRdIFMUw2NptZWBfs59r0v5oak08=",
+                "address": [
+                    "172.16.0.2/32",
+                    "2606:4700:110:82b3:cc76:3cdb:29b4:b071/128"
+                ],
+                "peers": [
+                    {
+                        "endpoint": "162.159.192.5:500",
+                        "publicKey": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
+                    }
+                ],
+                "mtu": 1280
+            },
+            "tag": "proxy_wireguard"
+        }
+    ],
+    "dns": {
+        "servers": [
+            "1.1.1.1",
+	    "1.0.0.1"
+        ],
+        "queryStrategy": "UseIPv4"
+    },
+    "routing": {
+        "domainStrategy": "IPOnDemand",
+        "rules": [
+	    {
+		"type": "field",
+		"inboundTag": "dns_inbound_x",
+		"outboundTag": "proxy_wireguard"
+	    },
+	    {
+	    	"type": "field",
+		"domain": ["domain:hostloc.com", "domain:nodeseek.com"],
+		"outboundTag": "proxy_wireguard"
+	    },
+	    {
+		"type": "field",
+		"ip": [
+		    "64.15.138.149/32",
+		    "104.168.35.134/32",
+		    "2000::/4",
+		    "geoip:telegram",
+		    "geoip:facebook"
+		],
+		"outboundTag": "proxy_wireguard"
+	    }
+        ]
+    }
+}

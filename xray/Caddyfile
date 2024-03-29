@@ -24,7 +24,7 @@
     reverse_proxy / http://localhost:2016
 }
 
-:15210 {
+:10201 {
     log {
 	output discard
     }
@@ -43,10 +43,10 @@
             versions h2c
         }
     }
-    reverse_proxy https://halo.cntest2022.cf {
-	header_up Host halo.cntest2022.cf
-    	header_up X-Real-IP {remote_host}
-    	header_up X-Forwarded-For {remote}
+    reverse_proxy https://halo.327237.xyz {
+	header_up Host halo.327237.xyz
+    	header_up X-Real-IP {remote_remote}
+    	header_up X-Forwarded-For {remote_remote}
     	header_up X-Forwarded-Proto {scheme}
     }
 }

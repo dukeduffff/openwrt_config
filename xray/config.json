@@ -1,8 +1,8 @@
 {
   "log": {
-    "error": "/root/passwall/error.log",
+    "error": "",
     "loglevel": "info",
-    "access": "none"
+    "access": ""
   },
   "fakedns": [
     {
@@ -21,7 +21,7 @@
       "sniffing": {
         "enabled": true,
         "destOverride": [
-	  "fakedns",
+	      "fakedns",
           "http",
           "tls"
         ]
@@ -121,7 +121,7 @@
                 "level": 0
               }
             ],
-            "port": 443
+            "port": 8443
           }
         ]
       }
@@ -265,6 +265,7 @@
     "tag": "dns_inbound"
   },
   "routing": {
+    "domainStrategy": "AsIs",
     "rules": [
       {
         "type": "field",
@@ -291,7 +292,7 @@
       {
         "type": "field",
         "ip": [
-          "geoip:private"
+          "192.168.0.0/16"
         ],
         "outboundTag": "direct"
       },

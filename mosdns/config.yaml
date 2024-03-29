@@ -20,10 +20,11 @@ plugins:
     args:
       concurrent: 2
       upstreams:
-        - addr: udp://127.0.0.1:1745
+        - addr: udp://221.179.155.177
+        - addr: udp://221.179.155.161
 
   # 转发至国外DNS，并发查询
-  - tag: forward_remote
+  - tag: forward_remote1
     type: forward
     args:
       concurrent: 2
@@ -33,6 +34,21 @@ plugins:
           enable_http3: false
           so_mark: 255
         - addr: tls://2606:4700:4700::1001
+          enable_pipeline: true
+          enable_http3: false
+          so_mark: 255
+
+  # 远程dns2
+  - tag: forward_remote2
+    type: forward
+    args:
+      concurrent: 2
+      upstreams:
+        - addr: tls://1.1.1.1
+          enable_pipeline: true
+          enable_http3: false
+          so_mark: 255
+        - addr: tls://1.0.0.1
           enable_pipeline: true
           enable_http3: false
           so_mark: 255
@@ -95,12 +111,11 @@ plugins:
     type: sequence
     args:
       - exec: $forward_local
-      - matches: "resp_ip $geoip_cn"
-        exec: accept
-      - exec: query_summary local
-      - exec: drop_resp
+      - matches: "!resp_ip $geoip_cn"
+        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+      - exec: accept
 
-  # adguard 上游
+  # 远程dns1
   - tag: adguard_sequence
     type: sequence
     args:
@@ -113,13 +128,20 @@ plugins:
       - exec: accept
 
   # fallback的secondary服务器,返回非国内ip则添加至ipset,返回国内ip只接受不会添加ipset
-  - tag: remote_sequence
+  - tag: remote_sequence1
     type: sequence
     args:
-      - exec: $forward_remote
+      - exec: $forward_remote1
       - matches: "!resp_ip $geoip_cn"
         exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
-      - exec: query_summary remote
+      - exec: accept
+
+  - tag: remote_sequence2
+    type: sequence
+    args:
+      - exec: $forward_remote2
+      - matches: "!resp_ip $geoip_cn"
+        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
       - exec: accept
 
   # fallback sequence
@@ -127,7 +149,7 @@ plugins:
     type: fallback
     args:
       primary: local_sequence
-      secondary: remote_sequence
+      secondary: remote_sequence1
       threshold: 500
       always_standby: true
 
@@ -139,6 +161,24 @@ plugins:
       - matches: "!resp_ip $geoip_cn"
         exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
       - exec: accept
+
+  - tag: final1
+    type: sequence
+    args:
+      - exec: $forward_local
+      - matches: "!resp_ip $geoip_cn"
+        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+      - matches:
+        exec: accept
+
+  - tag: final2
+    type: sequence
+    args:
+      - exec: $remote_sequence1
+      - matches: "!resp_ip $geoip_cn"
+        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+      - matches:
+        exec: accept
 
   # 主运行序列
   - tag: main_sequence
@@ -164,17 +204,19 @@ plugins:
         exec: $cache
       - matches: has_resp
         exec: accept
-      - matches: has_resp
-        exec: query_summary cache
-
-#      - matches: qname $geosite_cn
-#        exec: $forward_local
 #      - matches: has_resp
-#        exec: accept
-      # adguard上游
-      - exec: $adguard_sequence
+#        exec: query_summary cache
 
-#      - exec: $fallback
+      # 国内域名走运营商dns
+      - matches: qname $geosite_cn
+        exec: $forward_local
+      - matches: has_resp
+        exec: accept
+      # 执行
+#      - exec: $adguard_sequence
+
+      - exec: $final1
+      - exec: $final2
 
 
   # 启动监听服务

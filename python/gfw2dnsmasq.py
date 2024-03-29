@@ -8,16 +8,18 @@
 # https://gist.github.com/lanceliao/85cd3fcf1303dba2498c
 import argparse
 import json
+import re
 import typing
 from datetime import datetime
 
-import requests
 import dns.resolver
+import requests
 
 mydnsip = '127.0.0.1'
 mydnsport = '5153'
 ipset_name = "gfwlist"
 ipset6_name = "gfwlist6"
+best_ip_domain = "8.889288.xyz"
 
 # the url of gfwlist
 baseurl = 'https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt'
@@ -121,7 +123,7 @@ def dns_resolver(domain, ip_type=A):
     status = dns_res.get("Status")
     if status != 0:
         print(response.text)
-    ans_list = dns_res.get("Answer")
+    ans_list = dns_res.get("Answer", [])
     hosts = []
     for ans in ans_list:
         ip = ans.get("data")
@@ -137,13 +139,14 @@ def sys_dns_resolver(domain, ip_type=A):
     return hosts
 
 
-def get_domain_ip_by_dns(domain, with_ipv6=False, dr=dns_resolver):
-    hosts = dr(domain, A)
+def get_domain_ip_by_dns(domain, with_ipv4=True, with_ipv6=False, dr=dns_resolver):
     scores = []
-    for host in hosts:
-        scores.append(HostScore(host, speed=60))
+    if with_ipv4:
+        hosts = dr(domain, A)
+        for host in hosts:
+            scores.append(HostScore(host, speed=60))
     if with_ipv6:
-        hosts = dns_resolver(domain, AAAA)
+        hosts = dr(domain, AAAA)
         for host in hosts:
             scores.append(HostScore(host, speed=60))
     return scores
@@ -174,7 +177,7 @@ def ping_shell(host, cnt):
     return avg_time, loss_rate
 
 
-def tcping_shell(host, cnt, port=443):
+def tcping_shell(host, cnt, port=8443):
     # github开源地址:https://github.com/cloverstd/tcping/releases
     import subprocess
     import re
@@ -205,27 +208,55 @@ def tcping_shell(host, cnt, port=443):
     return avg_time, loss_rate
 
 
-def get_ipv4_cfnode_hosts(get_remote=True):
+def parse_html(html_str: str):
+    html_split = html_str.split("<tr>")
+    hosts = []
+    for s in html_split:
+        tags: typing.List[str] = s.split("\n")
+        if len(tags) < 5:
+            continue
+        i = 0
+        host = ""
+        carrier = ""
+        speed = 0
+        for tag in tags:
+            if "td" not in tag:
+                continue
+            result: str = re.findall("<td>(.*?)</td>", tag)
+            if not result:
+                continue
+            result = result[0]
+            # 字段赋值
+            if i == 0:
+                carrier = result
+            elif i == 1:
+                host = result
+            elif i == 2:
+                speed = int(result.replace("MB", "").strip())
+            i = i + 1
+        if carrier != "移动":
+            continue
+        hosts.append(HostScore(host, speed=speed))
+    return hosts
+
+
+ipv4_url = "https://monitor.gacjie.cn/page/cloudflare/ipv4.html"
+ipv6_url = "https://monitor.gacjie.cn/page/cloudflare/ipv6.html"
+
+
+def get_cfnode_hosts(get_remote=True, url=ipv4_url):
     hosts = []
     if not get_remote:
         return hosts
     try:
-        res = requests.get("https://monitor.gacjie.cn/api/ajax/get_cloud_flare_v4?page=1&limit=10", timeout=10)
+        res = requests.get(url, timeout=10)
     except Exception:
         return hosts
     if res.status_code != 200:
         return hosts
-    res_json = res.json()
-    if not res_json.get("status", False):
-        return hosts
-    ips = res_json.get("data", [])
-    for ip in ips:
-        if ip.get("device_name") != "山东移动":
-            continue
-        hosts.append(HostScore(
-            host=ip.get("address"),
-            speed=ip.get("speed", 0) / 100
-        ))
+    html_content = res.content.decode("utf-8")
+    html_content = html_content[html_content.index("<tbody>"):html_content.index("</tbody>")]
+    hosts: typing.List[HostScore] = parse_html(html_content.replace(" ", "").replace("<tbody>\n", ""))
     return hosts
 
 
@@ -309,7 +340,7 @@ def get_one_best_host_tcping(func: typing.Callable, **kwargs) -> typing.Tuple[st
     for host in hosts:
         print(host.host)
         host.avg, host.loss_rate = tcping_shell(host.host, ping_cnt)
-    hosts = [host for host in hosts if host.loss_rate < 0.2 and host.avg < 200]
+    hosts = [host for host in hosts if host.loss_rate < 0.2 and host.avg < 250]
     if hosts:
         hosts.sort(key=lambda a: a.score)
         return hosts[0].host, ":" in hosts[0].host
@@ -332,16 +363,20 @@ def chose_best_hosts_both_46() -> typing.Tuple[str, bool]:
     # 1. 尝试获取接口数据
     # if hour < 18 or hour > 19:
     #     # 这个时间段内尝试使用ipv4
-    #     host, is_ipv6 = get_one_best_host_tcping(get_ipv4_cfnode_hosts)
+    #     host, is_ipv6 = get_one_best_host_tcping(get_cfnode_hosts, url=ipv4_url)
     #     if host:
     #         return host, is_ipv6
+    host, is_ipv6 = get_one_best_host_tcping(get_cfnode_hosts, url=ipv4_url)
+    if host:
+        return host, is_ipv6
     # 2. 读取ipv6
-    # host, is_ipv6 = get_one_best_host_tcping(get_ipv6_cfnode_hosts)
-    # if host:
-    #     return host, is_ipv6
+    host, is_ipv6 = get_one_best_host_tcping(get_cfnode_hosts, url=ipv6_url)
+    if host:
+        return host, is_ipv6
     # 3. 走dns查询
-    host, is_ipv6 = get_one_best_host_tcping(get_domain_ip_by_dns, domain="cloudflare.cfgo.cc", with_ipv6=True,
-                                             dr=sys_dns_resolver)
+    host, is_ipv6 = get_one_best_host_tcping(
+        get_domain_ip_by_dns, domain=best_ip_domain, with_ipv4=True, with_ipv6=False,
+        dr=sys_dns_resolver)
     if host:
         return host, is_ipv6
     return default_ipv4, False
@@ -472,7 +507,7 @@ def parse_args():
     elif args.type == "domain":
         update_domain(args.ipv6, args.tcping)
     elif args.type == "test":
-        print(sys_dns_resolver("cloudflare.cfgo.cc", A))
+        print(get_cfnode_hosts())
 
 
 if __name__ == '__main__':

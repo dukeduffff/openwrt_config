@@ -32,3 +32,6 @@ if [ $? -eq 1 ]; then
     /etc/init.d/xray restart
 fi
 ```
+
+
+## 检查json

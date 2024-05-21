@@ -484,15 +484,36 @@ def update_domain(chose_ipv6, tcping):
     print(resp.content)
 
 
+class DefaultConfig(object):
+    my_keys = ["SrqyTnrhcV6FEwz8URLacX", "rAE5twzNJuk5tn3MuzsGVj"]
+    level = "active"
+    url = "https://api.day.app"
+
+
+def send_message(title="", msg="", badge=1, group="", keys=None, level=DefaultConfig.level):
+    if keys is None:
+        keys = DefaultConfig.my_keys
+    for key in keys:
+        requests.post(url=f"{DefaultConfig.url}/{key}", json={
+            "title": title,
+            "body": msg,
+            "badge": badge,
+            "group": group,
+        })
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("type", help="执行类型", choices=["ipset_gfw", "ipset_custom", "xray", "check", "test", "xray_cluster", "domain"])
+    parser.add_argument("type", help="执行类型", choices=[
+        "ipset_gfw", "ipset_custom", "xray", "check", "test", "xray_cluster", "domain", "msg"])
     parser.add_argument("-tpl", "--template", help="模版路径, only for xray")
     parser.add_argument("-td", "--target", help="配置写入路径, only for xray")
     parser.add_argument("-6", "--ipv6", action="store_true", help="生成ipv6, 否则生成ipv4")
     parser.add_argument("-t", "--tcping", action="store_true", help="使用是否tcping检测")
     parser.add_argument("-url", "--url", help="测试url, only for check")
     parser.add_argument("-c", "--concurrent", help="集群并发度, only for xray_cluster")
+    parser.add_argument("-m", "--msg", help="消息主体")
+    parser.add_argument("-ti", "--title", help="标题")
 
     args = parser.parse_args()
 
@@ -506,8 +527,10 @@ def parse_args():
         replace_cluster_template(args.template, args.target, args.ipv6, args.tcping, args.concurrent)
     elif args.type == "domain":
         update_domain(args.ipv6, args.tcping)
+    elif args.type == "msg":
+        send_message(args.title, args.msg)
     elif args.type == "test":
-        print(get_cfnode_hosts())
+        print(send_message("测试标题", "测试内容"))
 
 
 if __name__ == '__main__':

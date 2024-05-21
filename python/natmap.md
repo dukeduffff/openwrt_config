@@ -1,14 +1,17 @@
 # natmap notify.sh
-```
+```shell
 #!/bin/bash
 
-echo "$0 $1 $2 $3 $4 $5" > /root/natmap/map_result
-> /www/subscribe/shadowrocket/config.txt
-python rocket_subscribe.py $1 $2 /www/subscribe/shadowrocket/config.txt
+cd /root/natmap
+echo "$0 $1 $2 $3 $4 $5" > map_result
+# > /www/subscribe/shadowrocket/config.txt
+ipv6 = `ip -f inet6 addr show dev eth1.10.lan | sed -n '2p' | awk -F' ' '{print $2}' | sed 's/.\{3\}$//'`
+python rocket_subscribe.py $1 $2 $ipv6 config.txt
+cp config.txt /www/subscribe/shadowrocket/
 ```
 
 # 生成订阅信息
-```
+```python
 import argparse
 import base64
 

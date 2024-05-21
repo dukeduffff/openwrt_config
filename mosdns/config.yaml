@@ -191,6 +191,12 @@ plugins:
       - matches: qtype 65
         exec: reject 3
 
+      # 国内域名走运营商dns
+      - matches: qname $geosite_cn
+        exec: $forward_local
+      - matches: has_resp
+        exec: accept
+
       # fakedns逻辑
       - matches: qname $geosite_gfw
         exec: forward udp://127.0.0.1:5153
@@ -207,11 +213,6 @@ plugins:
 #      - matches: has_resp
 #        exec: query_summary cache
 
-      # 国内域名走运营商dns
-      - matches: qname $geosite_cn
-        exec: $forward_local
-      - matches: has_resp
-        exec: accept
       # 执行
 #      - exec: $adguard_sequence
 

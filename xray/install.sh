@@ -24,7 +24,7 @@ check_pkg_and_install unzip
 check_pkg_and_install wget
 
 TMP_DOWNLOAD="/tmp/xray_install"
-INSTALL_PATH="/var/xray/"
+INSTALL_PATH="/root/passwall"
 #XRAY_URL="https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip"
 XRAY_URL="https://gh-proxy.com/https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip"
 GFW_URL="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/gfw.txt"
@@ -49,13 +49,15 @@ run_without_output wget -O xray.zip ${XRAY_URL}
 run_without_output unzip xray.zip -d ./xray
 run_without_output cp -r ./xray/* ${INSTALL_PATH}
 
-cd current_dir
+cd "${current_dir}"
+chmod +x ./xray_autoboot.sh
 run_without_output cp ./config.json ./xray_autoboot.sh ${INSTALL_PATH}
 run_without_output cp ./direct.txt ${INSTALL_PATH}
-run_without_output cp ./xray.sh /etc/init.d/
+chmod +x ./xray
+run_without_output cp ./xray /etc/init.d/
 run_without_output /etc/init.d/xray enable  # 开机自启xray进程
 
-sed -i "/exit(0);/r base ${INSTALL_PATH}/xray_autoboot.sh" /etc/rc.local
+#sed -i "/exit(0);/r bash ${INSTALL_PATH}/xray_autoboot.sh" /etc/rc.local
 
 cd ${INSTALL_PATH}
 wget -O gfw.txt ${GFW_URL}

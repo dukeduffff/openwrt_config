@@ -97,14 +97,14 @@ plugins:
     args:
       files:
 #        - "/var/mosdns/geosite_geolocation-!cn.txt"
-        - "/root//proxy_list.txt"
+        - "/root/passwall/gfw.txt"
 
   # gfw域名
   - tag: geosite_gfw
     type: domain_set
     args:
       files:
-        - "/root/passwall/proxy_list.txt"
+        - "/root/passwall/gfw.txt"
 
   # fallback的primary服务器,返回非国内ip则drop_resp
   - tag: local_sequence
@@ -112,7 +112,7 @@ plugins:
     args:
       - exec: $forward_local
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - exec: accept
 
   # 远程dns1
@@ -123,7 +123,7 @@ plugins:
       - matches: "qname $geosite_cn"
         exec: accept
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - exec: query_summary local
       - exec: accept
 
@@ -133,7 +133,7 @@ plugins:
     args:
       - exec: $forward_remote1
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - exec: accept
 
   - tag: remote_sequence2
@@ -141,7 +141,7 @@ plugins:
     args:
       - exec: $forward_remote2
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - exec: accept
 
   # fallback sequence
@@ -159,7 +159,7 @@ plugins:
     args:
       - exec: ttl 600
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - exec: accept
 
   - tag: final1
@@ -167,7 +167,7 @@ plugins:
     args:
       - exec: $forward_local
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - matches:
         exec: accept
 
@@ -176,7 +176,7 @@ plugins:
     args:
       - exec: $remote_sequence1
       - matches: "!resp_ip $geoip_cn"
-        exec: ipset gfwlist,inet,24,3600 gfwlist6,inet6,64,3600
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - matches:
         exec: accept
 

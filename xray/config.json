@@ -29,7 +29,7 @@
       "streamSettings": {
         "sockopt": {
           "tproxy": "tproxy",
-          "mark": "255"
+          "mark": 255
         }
       },
       "tag": "in"
@@ -107,7 +107,7 @@
           "permit_without_stream": true
         },
         "tlsSettings": {
-          "allowInsecure": false,
+          "allowInsecure": true,
           "serverName": "www.327237.xyz"
         },
         "security": "tls",
@@ -120,7 +120,7 @@
       "settings": {
         "vnext": [
           {
-            "address": "www.327237.xyz",
+            "address": "2401:b60:16:a9::",
             "users": [
               {
                 "encryption": "none",
@@ -128,7 +128,7 @@
                 "level": 0
               }
             ],
-            "port": 8443
+            "port": 10201
           }
         ]
       }
@@ -285,12 +285,12 @@
       {
         "type": "field",
         "inboundTag": "in",
-        "outboundTag": "proxy_http"
+        "outboundTag": "proxy_grpc"
       },
       {
         "type": "field",
         "inboundTag": "dns_inbound",
-        "outboundTag": "proxy_http"
+        "outboundTag": "proxy_grpc"
       },
       {
         "type": "field",
@@ -309,7 +309,7 @@
       {
         "type": "field",
         "inboundTag": "remote_in",
-        "outboundTag": "proxy_http"
+        "outboundTag": "proxy_grpc"
       }
     ]
   },

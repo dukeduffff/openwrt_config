@@ -97,7 +97,7 @@ plugins:
     args:
       files:
 #        - "/var/mosdns/geosite_geolocation-!cn.txt"
-        - "/root/passwall/proxy_list.txt"
+        - "/root//proxy_list.txt"
 
   # gfw域名
   - tag: geosite_gfw

@@ -26,6 +26,12 @@
           "tls"
         ]
       },
+      "streamSettings": {
+        "sockopt": {
+          "tproxy": "tproxy",
+          "mark": "255"
+        }
+      },
       "tag": "in"
     },
     {
@@ -92,7 +98,7 @@
       }
     },
     {
-      "protocol": "vmess",
+      "protocol": "vless",
       "streamSettings": {
         "grpcSettings": {
           "serviceName": "grpc",

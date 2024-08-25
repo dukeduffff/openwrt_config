@@ -27,6 +27,7 @@ TMP_DOWNLOAD="/tmp/xray_install"
 INSTALL_PATH="/root/passwall"
 #XRAY_URL="https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip"
 XRAY_URL="https://gh-proxy.com/https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip"
+# https://github.com/Loyalsoldier/v2ray-rules-dat
 GFW_URL="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/gfw.txt"
 
 rm -rf ${TMP_DOWNLOAD}/*

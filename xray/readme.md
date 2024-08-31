@@ -29,3 +29,12 @@ then
 	python /root/passwall/tool_kit.py msg --title 网络连接 --msg 连接谷歌出现问题,请手动处理
 fii
 ```
+
+```shell
+table inet dnsmasq {
+    chain prerouting {
+        type nat hook prerouting priority dstnat - 5; policy accept;
+        meta nfproto { ipv4, ipv6 } udp dport 53 counter packets 430 bytes 34012 redirect to :53 comment "DNSMASQ HIJACK"
+    }
+}
+```

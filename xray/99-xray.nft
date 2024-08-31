@@ -55,3 +55,4 @@ table inet xray {
         iifname "eth1.10" udp dport 53 redirect to :5335
     }
 }
+

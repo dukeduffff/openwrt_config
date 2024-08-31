@@ -1,5 +1,5 @@
 log:
-  level: error
+  level: debug
   file: "/var/log/mosdns.log"
 
 # API 入口设置
@@ -18,10 +18,9 @@ plugins:
   - tag: forward_local
     type: forward
     args:
-      concurrent: 2
+      concurrent: 1
       upstreams:
-        - addr: udp://221.179.155.177
-        - addr: udp://221.179.155.161
+        - addr: udp://127.0.0.1:1745
 
   # 转发至国外DNS，并发查询
   - tag: forward_remote1
@@ -96,7 +95,7 @@ plugins:
     type: domain_set
     args:
       files:
-#        - "/var/mosdns/geosite_geolocation-!cn.txt"
+        #        - "/var/mosdns/geosite_geolocation-!cn.txt"
         - "/root/passwall/gfw.txt"
 
   # gfw域名
@@ -202,22 +201,14 @@ plugins:
         exec: forward udp://127.0.0.1:5153
       - matches: has_resp
         exec: accept
-#      - matches: has_resp
-#        exec: goto gfw-list
 
       # 缓存逻辑
       - matches: "!qname 327237.xyz"
         exec: $cache
       - matches: has_resp
         exec: accept
-#      - matches: has_resp
-#        exec: query_summary cache
 
-      # 执行
-#      - exec: $adguard_sequence
-
-      - exec: $final1
-      - exec: $final2
+      - exec: $fallback
 
 
   # 启动监听服务

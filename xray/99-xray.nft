@@ -1,0 +1,57 @@
+#!/usr/sbin/nft -f
+
+table inet xray {
+    set gfwlist {
+        type ipv4_addr
+        timeout 1h
+        flags interval
+        elements = {
+            198.18.0.0/15 timeout 1000d,
+            91.108.4.0/22 timeout 1000d,
+            91.108.8.0/22 timeout 1000d,
+            91.108.12.0/22 timeout 1000d,
+            91.108.20.0/22 timeout 1000d,
+            91.108.36.0/23 timeout 1000d,
+            91.108.38.0/23 timeout 1000d,
+            91.108.56.0/22 timeout 1000d,
+            149.154.160.0/20 timeout 1000d,
+            185.76.151.0/24 timeout 1000d
+        }
+    }
+    set gfwlist6 {
+        type ipv6_addr
+        timeout 1h
+        flags interval
+        elements = {
+            2001:b28:f23d::/48 timeout 1000d,
+            2001:b28:f23f::/48 timeout 1000d,
+            2001:67c:4e8::/48 timeout 1000d,
+            2001:b28:f23c::/48 timeout 1000d,
+            2a0a:f280::/32 timeout 1000d
+        }
+    }
+    chain prerouting {
+        type filter hook prerouting priority 0; policy accept;
+        meta mark 0xff return
+        ip daddr != @gfwlist return
+        ip6 daddr != @gfwlist6 return
+        meta l4proto {tcp, udp} meta mark set 1 tproxy to :1070 accept
+    }
+    chain output {
+        type route hook output priority 0; policy accept;
+        meta mark 0xff return
+        ip daddr != @gfwlist return
+        ip6 daddr != @gfwlist6 return
+        meta l4proto {tcp, udp} meta mark set 1 accept
+    }
+    chain divert {
+        type filter hook prerouting priority mangle; policy accept;
+        meta l4proto tcp socket transparent 1 meta mark set 0x00000001 accept
+    }
+
+    chain prerouting_dns {
+        type nat hook prerouting priority 0; policy accept;
+        iifname "eth1.10" tcp dport 53 redirect to :5335
+        iifname "eth1.10" udp dport 53 redirect to :5335
+    }
+}

@@ -52,7 +52,7 @@ run_without_output cp -r ./xray/* ${INSTALL_PATH}
 
 cd "${current_dir}"
 chmod +x ./xray_autoboot.sh
-run_without_output cp ./config.json ./xray_autoboot.sh ./99-xray.nft ${INSTALL_PATH}
+run_without_output cp ./config.json ./xray_autoboot.sh ./notify.sh ./99-xray.nft ${INSTALL_PATH}
 run_without_output cp ./direct.txt ${INSTALL_PATH}
 chmod +x ./xray
 run_without_output cp ./xray /etc/init.d/

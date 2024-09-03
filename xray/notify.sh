@@ -7,3 +7,4 @@ ipv4_port=$2
 curl "http://192.168.31.3:3010/add_vmess?ip=${ipv4}&ps=ff-v4&port=${ipv4_port}"
 curl "http://192.168.31.3:3010/add_vmess?ip=${ipv6}&ps=ff-v6&port=1071"
 curl "http://192.168.31.3:3010/gen_config"
+curl 'http://192.168.31.3:3010/send_message?title=网络变更&msg=网络变更，已更新配置'

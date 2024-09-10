@@ -51,8 +51,8 @@ table inet xray {
 
     chain prerouting_dns {
         type nat hook prerouting priority 0; policy accept;
-        iifname "eth1.10" tcp dport 53 redirect to :5335
-        iifname "eth1.10" udp dport 53 redirect to :5335
+        iifname "eth1.10" tcp dport 53 redirect to :1745
+        iifname "eth1.10" udp dport 53 redirect to :1745
     }
 }
 

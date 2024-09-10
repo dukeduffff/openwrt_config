@@ -20,7 +20,14 @@ plugins:
     args:
       concurrent: 1
       upstreams:
-        - addr: udp://127.0.0.1:1745
+        - addr: udp://221.179.155.177:53
+          enable_pipeline: true
+          enable_http3: false
+          so_mark: 255
+        - addr: udp://221.179.155.161:53
+          enable_pipeline: true
+          enable_http3: false
+          so_mark: 255
 
   # 转发至国外DNS，并发查询
   - tag: forward_remote1
@@ -57,7 +64,7 @@ plugins:
     type: hosts
     args:
       entries:
-        - "domain:327237.xyz 172.67.3.3"
+        - "domain:www.327237.xyz 172.67.3.3"
 
   # 国内域名
   - tag: geosite_cn
@@ -203,7 +210,7 @@ plugins:
         exec: accept
 
       # 缓存逻辑
-      - matches: "!qname 327237.xyz"
+      - matches: "!qname www.327237.xyz"
         exec: $cache
       - matches: has_resp
         exec: accept

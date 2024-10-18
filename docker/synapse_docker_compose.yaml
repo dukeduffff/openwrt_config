@@ -1,0 +1,45 @@
+version: "3.4"
+
+services:
+  postgres:
+    container_name: synapse_postgres
+    hostname: postgres
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      # This will create a docker volume to persist the database files in.
+      # If you prefer those files to be outside of docker, you'll need to change this.
+      - ./postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: synapse_passwd
+      POSTGRES_USER: synapse_user
+      POSTGRES_DATABASE: synapse
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - synapse_network
+
+  synapse:
+    container_name: synapse
+    hostname: synapse
+    image: matrixdotorg/synapse:latest
+    ports:
+      - 8008:8008
+    volumes:
+      - ./data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synapse_network
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - SSL_CERT_FILE=/data/cacert.pem
+
+networks:
+  synapse_network:
+    attachable: true

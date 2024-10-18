@@ -18,7 +18,9 @@ table inet xray {
             185.76.151.0/24 timeout 1000d,
             154.16.183.59/32 timeout 1000d,
             198.41.192.0/24 timeout 1000d,
-            198.41.200.0/24 timeout 1000d
+            198.41.200.0/24 timeout 1000d,
+            1.1.1.1/32 timeout 1000d,
+            1.0.0.1/32 timeout 1000d,
         }
     }
     set gfwlist6 {
@@ -31,7 +33,9 @@ table inet xray {
             2001:67c:4e8::/48 timeout 1000d,
             2001:b28:f23c::/48 timeout 1000d,
             2a0a:f280::/32 timeout 1000d,
-            2401:b60:16:a9::/64 timeout 1000d
+            2401:b60:16:a9::/64 timeout 1000d,
+            2606:4700:4700::1111/128 timeout 1000d,
+            2606:4700:4700::1001/128 timeout 1000d,
         }
     }
     chain prerouting {

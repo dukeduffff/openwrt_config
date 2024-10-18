@@ -1,0 +1,18 @@
+version: "3.4"
+
+services:
+  caddy:
+    container_name: caddy
+    image: caddy:latest
+    restart: always
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - "8180:80"
+      - "8143:443"
+    networks:
+      - caddy_network
+
+networks:
+  caddy_network:
+    attachable: true

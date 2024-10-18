@@ -1,5 +1,5 @@
 log:
-  level: debug
+  level: info
   file: "/var/log/mosdns.log"
 
 # API 入口设置
@@ -20,11 +20,11 @@ plugins:
     args:
       concurrent: 1
       upstreams:
-        - addr: udp://221.179.155.177:53
+        - addr: udp://219.141.140.10:53
           enable_pipeline: true
           enable_http3: false
           so_mark: 255
-        - addr: udp://221.179.155.161:53
+        - addr: udp://219.141.136.10:53
           enable_pipeline: true
           enable_http3: false
           so_mark: 255
@@ -38,11 +38,9 @@ plugins:
         - addr: tls://2606:4700:4700::1111
           enable_pipeline: true
           enable_http3: false
-          so_mark: 255
         - addr: tls://2606:4700:4700::1001
           enable_pipeline: true
           enable_http3: false
-          so_mark: 255
 
   # 远程dns2
   - tag: forward_remote2
@@ -52,19 +50,15 @@ plugins:
       upstreams:
         - addr: tls://1.1.1.1
           enable_pipeline: true
-          enable_http3: false
-          so_mark: 255
         - addr: tls://1.0.0.1
           enable_pipeline: true
-          enable_http3: false
-          so_mark: 255
 
   # 自定义hosts
   - tag: hosts
     type: hosts
     args:
       entries:
-        - "domain:www.327237.xyz 172.67.3.3"
+        - "domain:www2.327237.xyz 172.67.3.3"
 
   # 国内域名
   - tag: geosite_cn
@@ -112,6 +106,12 @@ plugins:
       files:
         - "/root/passwall/gfw.txt"
 
+  - tag: remote_domains
+    type: domain_set
+    args:
+      files:
+        - "/root/passwall/remote_domains.txt"
+
   # fallback的primary服务器,返回非国内ip则drop_resp
   - tag: local_sequence
     type: sequence
@@ -155,7 +155,7 @@ plugins:
     type: fallback
     args:
       primary: local_sequence
-      secondary: remote_sequence1
+      secondary: remote_sequence2
       threshold: 500
       always_standby: true
 
@@ -197,21 +197,29 @@ plugins:
       - matches: qtype 65
         exec: reject 3
 
+      # 缓存逻辑
+      - matches: "!qname www1.327237.xyz"
+        exec: $cache
+      - matches: has_resp
+        exec: accept
+
       # 国内域名走运营商dns
       - matches: qname $geosite_cn
         exec: $forward_local
       - matches: has_resp
         exec: accept
 
-      # fakedns逻辑
-      - matches: qname $geosite_gfw
-        exec: forward udp://127.0.0.1:5153
+      # 走国外dns
+      - matches: qname $remote_domains
+        exec: $forward_remote2
+      - matches: "!resp_ip $geoip_cn"
+        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - matches: has_resp
         exec: accept
 
-      # 缓存逻辑
-      - matches: "!qname www.327237.xyz"
-        exec: $cache
+      # fakedns逻辑
+      - matches: qname $geosite_gfw
+        exec: forward udp://127.0.0.1:5153
       - matches: has_resp
         exec: accept
 

@@ -1,0 +1,316 @@
+{
+  "log": {
+    "error": "",
+    "loglevel": "info",
+    "access": ""
+  },
+  "fakedns": [
+    {
+      "ipPool": "198.18.0.0/15",
+      "poolSize": 65535
+    }
+  ],
+  "inbounds": [
+    {
+      "port": 1070,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "network": "tcp,udp",
+        "followRedirect": true
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "fakedns",
+          "http",
+          "tls"
+        ]
+      },
+      "streamSettings": {
+        "sockopt": {
+          "tproxy": "tproxy",
+          "mark": 255
+        }
+      },
+      "tag": "in"
+    },
+    {
+      "port": 5153,
+      "tag": "dns-in",
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "8.8.8.8",
+        "port": 53,
+        "network": "tcp,udp",
+        "userLevel": 1
+      }
+    },
+    {
+      "port": 1072,
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "id": "1f8f05a1-1a29-4862-a91a-ecb2a4a5e272",
+            "alertId": 0
+          }
+        ]
+      },
+      "tag": "remote_in"
+    },
+    {
+      "tag": "socks_in",
+      "port": 1081,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vmess",
+      "streamSettings": {
+        "grpcSettings": {
+          "serviceName": "grpc",
+          "multiMode": true,
+          "idle_timeout": 10,
+          "permit_without_stream": false,
+          "health_check_timeout": 20,
+          "initial_windows_size": 0
+        },
+        "tlsSettings": {
+          "allowInsecure": true,
+          "serverName": "www.327237.xyz"
+        },
+        "security": "tls",
+        "network": "grpc",
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "tag": "proxy_grpc",
+      "settings": {
+        "vnext": [
+          {
+            "address": "2606:4700:3032::6815:479a",
+            "users": [
+              {
+                "encryption": "none",
+                "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1",
+                "level": 0
+              }
+            ],
+            "port": 443
+          }
+        ]
+      }
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "154.16.183.59",
+            "port": 443,
+            "users": [
+              {
+                "id": "47c6a45d-67f8-45ad-83aa-1aaa2e1b1956",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "serverName": "www.327237.xyz",
+          "publicKey": "mG_T9pV16XRffX8_kx88yKEQDaagQXOXB2Ic-71bBGk",
+          "shortId": "1abad697a3"
+        },
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "tag": "proxy_http2_reality"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "154.16.183.59",
+            "port": 443,
+            "users": [
+              {
+                "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1",
+                "encryption": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "serverName": "www.327237.xyz",
+          "publicKey": "mG_T9pV16XRffX8_kx88yKEQDaagQXOXB2Ic-71bBGk",
+          "shortId": "1abad697a3",
+          "spiderX": "/"
+        },
+        "xhttpSettings": {
+          "host": "",
+          "path": "/matrix_chat",
+          "mode": "auto",
+          "extra": {
+            "noGRPCHeader": false,
+            "scMaxEachPostBytes": 1000000,
+            "scMinPostsIntervalMs": 30,
+            "xPaddingBytes": "100-1000",
+            "xmux": {
+              "maxConcurrency": "16-32",
+              "maxConnections": 0,
+              "cMaxReuseTimes": "64-128",
+              "cMaxLifetimeMs": 0,
+              "hMaxRequestTimes": "800-900",
+              "hKeepAlivePeriod": 0
+            },
+            "downloadSettings": {
+              "address": "2606:4700:3032::6815:479a",
+              "port": 443,
+              "network": "xhttp",
+              "security": "tls",
+              "tlsSettings": {
+                "serverName": "www.327237.xyz",
+                "allowInsecure": false,
+                "alpn": ["h2"],
+                "fingerprint": "chrome"
+              },
+              "xhttpSettings": {
+                "host": "www.327237.xyz",
+                "path": "/matrix_chat",
+                "mode": "auto",
+                "extra": {
+                  "noGRPCHeader": false,
+                  "scMaxEachPostBytes": 1000000,
+                  "scMinPostsIntervalMs": 30,
+                  "xPaddingBytes": "100-1000",
+                  "xmux": {
+                    "maxConcurrency": "16-32",
+                    "maxConnections": 0,
+                    "cMaxReuseTimes": "64-128",
+                    "cMaxLifetimeMs": 0,
+                    "hMaxRequestTimes": "800-900",
+                    "hKeepAlivePeriod": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "tag": "proxy_xhttp"
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {
+        "domainStrategy": "AsIs",
+        "userLevel": 0
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "none"
+        }
+      }
+    },
+    {
+      "protocol": "dns",
+      "tag": "dns-out",
+      "streamSettings": {
+        "sockopt": {
+          "mark": 255
+        }
+      },
+      "proxySettings": {
+        "tag": "proxy_socks"
+      }
+    }
+  ],
+  "dns": {
+    "hosts": {
+      "dns.google": "8.8.8.8"
+    },
+    "servers": [
+      {
+        "address": "fakedns",
+        "skipFallback": true
+      }
+    ],
+    "queryStrategy": "UseIP",
+    "disableFallback": true,
+    "tag": "dns_inbound"
+  },
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": "dns-in",
+        "outboundTag": "dns-out"
+      },
+      {
+        "type": "field",
+        "inboundTag": "dns_inbound",
+        "outboundTag": "proxy_grpc"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "openmv.dynv6.net",
+          "inner.327237.xyz"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "192.168.0.0/16"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "198.41.192.0/24",
+          "198.41.200.0/24"
+        ],
+        "outboundTag": "proxy_http2_reality"
+      },
+      {
+        "type": "field",
+        "inboundTag": "socks_in",
+        "outboundTag": "proxy_xhttp"
+      },
+      {
+        "type": "field",
+        "inboundTag": "remote_in",
+        "outboundTag": "proxy_http2_reality"
+      }
+    ]
+  },
+  "transport": {}
+}

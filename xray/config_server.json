@@ -1,0 +1,274 @@
+{
+  "log": {
+    "loglevel": "info",
+    "access": "",
+    "error": ""
+  },
+  "inbounds": [
+    {
+      "tag": "grpc_in",
+      "listen": "/dev/shm/grpc_client.sock,0666",
+      "protocol": "vmess",
+      "settings": {
+        "clients": [
+          {
+            "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "grpc",
+        "security": "none",
+        "grpcSettings": {
+          "serviceName": "grpc"
+        }
+      }
+    },
+    {
+      "listen": "/dev/shm/xhttp_client_upload.sock,0666",
+      "tag": "xhttp_in",
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "xhttpSettings": {
+          "host": "",
+          "path": "/matrix_chat",
+          "mode": "auto",
+          "extra": {
+            "noSSEHeader": false,
+            "scMaxEachPostBytes": 1000000,
+            "scMaxBufferedPosts": 30,
+            "xPaddingBytes": "100-1000"
+          }
+        }
+      }
+    },
+    {
+      "tag": "reality_in",
+      "port": 443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "47c6a45d-67f8-45ad-83aa-1aaa2e1b1956"
+          }
+        ],
+        "decryption": "none",
+        "fallbacks": [
+          {
+            "dest": "/dev/shm/xhttp_client_upload.sock",
+            "xver": 0
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "show": true,
+          "target": "www.327237.xyz:443",
+          "serverNames": [
+            "www.327237.xyz"
+          ],
+          "xver": 0,
+          "privateKey": "AIXUTJLUvlUbpxMuyePW1jdi1VZ1LqRXyAZGB8uTmXw",
+          "shortIds": [
+            "1abad697a3"
+          ]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "freedom",
+      "tag": "free"
+    },
+    {
+      "protocol": "wireguard",
+      "settings": {
+        "secretKey": "2P1E56Tnsi8R94AjRdIFMUw2NptZWBfs59r0v5oak08=",
+        "address": [
+          "172.16.0.2/32",
+          "2606:4700:110:82b3:cc76:3cdb:29b4:b072/128"
+        ],
+        "peers": [
+          {
+            "endpoint": "[162.159.192.210]:4500",
+            "publicKey": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo="
+          }
+        ],
+        "mtu": 1280,
+        "kernelMode": false
+      },
+      "tag": "proxy_wireguard"
+    },
+    {
+      "protocol": "vless",
+      "tag": "cloudflare_out",
+      "settings": {
+        "vnext": [
+          {
+            "address": "cdn.327237.xyz",
+            "port": 443,
+            "users": [
+              {
+                "id": "5056e319-4b5d-43b1-8123-84bc009488e9",
+                "encryption": "none",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "cdn.327237.xyz"
+        },
+        "wsSettings": {
+          "path": "/?ed=2048"
+        }
+      }
+    },
+    {
+      "protocol": "vmess",
+      "tag": "hostmjj",
+      "settings": {
+        "vnext": [
+          {
+            "address": "www.darkroom.lol",
+            "port": 8080,
+            "users": [
+              {
+                "id": "22826b44-5c1a-4b4b-dbaa-83a2e8bd95f0",
+                "encryption": "none",
+                "level": 0
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "tlsSettings": {
+          "serverName": ""
+        },
+        "wsSettings": {
+          "path": "/",
+          "host": "www.darkroom.lol"
+        }
+      }
+    },
+    {
+      "protocol": "trojan",
+      "tag": "freemjj",
+      "settings": {
+        "servers": [
+          {
+            "address": "whole-foxhound.boa152.lol",
+            "port": 443,
+            "password": "3723507166611775488"
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "whole-foxhound.boa152.lol"
+        }
+      }
+    },
+    {
+      "tag": "proxy_socks",
+      "protocol": "socks",
+      "settings": {
+        "servers": [
+          {
+            "address": "127.0.0.1",
+            "port": 1088
+          }
+        ]
+      }
+    }
+  ],
+  "dns": {
+    "hosts": {
+      "h2.cftunnel.com": "198.41.192.27"
+    },
+    "servers": [
+      "https://1.1.1.1/dns-query",
+      "https://1.0.0.1/dns-query"
+    ],
+    "queryStrategy": "UseIPv4"
+  },
+  "routing": {
+    "domainStrategy": "IPOnDemand",
+    "rules": [
+      {
+        "type": "field",
+        "ip": [
+          "154.16.183.59/24",
+          "198.41.200.0/24",
+          "198.41.192.0/24",
+          "1.1.1.1/32",
+          "1.0.0.1/32"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:discoverhongkong.com",
+          "domain:cftunnel.com"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:google.com",
+          "geosite:tiktok",
+          "domain:pincong.rocks"
+        ],
+        "outboundTag": "proxy_socks"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:cloudflare"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:telegram"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "inboundTag": "grpc_in",
+        "outboundTag": "direct"
+      },
+      {
+        "type": "field",
+        "inboundTag": "reality_in",
+        "outboundTag": "direct"
+      }
+    ]
+  }
+}

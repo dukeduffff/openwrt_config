@@ -2,48 +2,51 @@
     root * /root/caddy
     file_server browse
 }
+
 :443 {
     log {
-	output discard
+	output stdout
     }
     tls /root/caddy/cntest.pem /root/caddy/cntest.key
-    reverse_proxy /home http://localhost:8083 {
+    reverse_proxy /matrix_chat http://localhost:8083 {
         transport http {
             read_buffer 1m
             write_buffer 1m
-            versions h2c
         }
     }
-    reverse_proxy /grpc/* http://localhost:8082 {
+    reverse_proxy /grpc/* http://[::1]:8082 {
         transport http {
-            read_buffer 1m
-            write_buffer 1m
+            # read_buffer 1k
+            # write_buffer 1k
             versions h2c
         }
     }
-    reverse_proxy / http://localhost:2016
+    reverse_proxy /* http://127.0.0.1:1313 {
+    	header_up X-Real-IP {remote_remote}
+    	header_up X-Forwarded-For {remote_remote}
+    	header_up X-Forwarded-Proto {scheme}
+    }
 }
 
 :10201 {
     log {
-	output discard
+	output stdout
     }
     tls /root/caddy/cntest.pem /root/caddy/cntest.key
-    reverse_proxy /home http://localhost:8083 {
+    reverse_proxy /matrix_chat /dev/shm/xhttp_client_upload.sock {
         transport http {
             read_buffer 1m
             write_buffer 1m
         }
     }
-    reverse_proxy /grpc/* http://localhost:8082 {
+    reverse_proxy /grpc/* http://[::1]:8082 {
         transport http {
-            read_buffer 1m
-            write_buffer 1m
+            # read_buffer 1k
+            # write_buffer 1k
             versions h2c
         }
     }
-    reverse_proxy https://halo.327237.xyz {
-	    header_up Host halo.327237.xyz
+    reverse_proxy /* http://127.0.0.1:1313 {
     	header_up X-Real-IP {remote_remote}
     	header_up X-Forwarded-For {remote_remote}
     	header_up X-Forwarded-Proto {scheme}

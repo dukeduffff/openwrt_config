@@ -18,40 +18,27 @@ plugins:
   - tag: forward_local
     type: forward
     args:
-      concurrent: 1
+      concurrent: 2
       upstreams:
         - addr: udp://219.141.140.10:53
-          enable_pipeline: true
-          enable_http3: false
           so_mark: 255
         - addr: udp://219.141.136.10:53
-          enable_pipeline: true
-          enable_http3: false
           so_mark: 255
 
-  # 转发至国外DNS，并发查询
-  - tag: forward_remote1
+  # 远程dns
+  - tag: forward_remote
     type: forward
     args:
       concurrent: 2
       upstreams:
-        - addr: tls://2606:4700:4700::1111
+        - addr: tls://1.1.1.1:853
           enable_pipeline: true
-          enable_http3: false
-        - addr: tls://2606:4700:4700::1001
+          socks5: "192.168.31.3:1081"
+#          so_mark: 255
+        - addr: tls://1.0.0.1:853
           enable_pipeline: true
-          enable_http3: false
-
-  # 远程dns2
-  - tag: forward_remote2
-    type: forward
-    args:
-      concurrent: 2
-      upstreams:
-        - addr: tls://1.1.1.1
-          enable_pipeline: true
-        - addr: tls://1.0.0.1
-          enable_pipeline: true
+          socks5: "192.168.31.3:1081"
+#          so_mark: 255
 
   # 自定义hosts
   - tag: hosts
@@ -64,9 +51,18 @@ plugins:
   - tag: geosite_cn
     type: domain_set
     args:
+      exps:
+        - "domain:turn.cloudflare.com"
+        - "keyword:apple.com"
+        - "keyword:aaplimg.com"
+        - "keyword:mzstatic.com"
+        - "keyword:mzstatic"
+        - "keyword:icloud"
+        - "keyword:akamaiedge.net"
+        - "keyword:digicert.com"
+        - "327237.xyz"
       files:
         - "/var/mosdns/geosite_cn.txt"
-        - "/root/passwall/direct.txt"
 
   # 国内 IP
   - tag: geoip_cn
@@ -90,11 +86,41 @@ plugins:
         - "2600:1f16:8c5:101::/64"
       files:
         - "/var/mosdns/geoip_cn.txt"
+        - "/root/passwall/ip_near.txt"
+
+  - tag: geoip_cloudflare
+    type: ip_set
+    args:
+      ips:
+        - "103.21.244.0/22"
+        - "103.22.200.0/22"
+        - "103.31.4.0/22"
+        - "104.16.0.0/13"
+        - "104.24.0.0/14"
+        - "108.162.192.0/18"
+        - "131.0.72.0/22"
+        - "141.101.64.0/18"
+        - "162.158.0.0/15"
+        - "172.64.0.0/13"
+        - "173.245.48.0/20"
+        - "188.114.96.0/20"
+        - "190.93.240.0/20"
+        - "197.234.240.0/22"
+#        - "198.41.128.0/17"
+        - "2400:cb00::/32"
+        - "2606:4700::/32"
+        - "2803:f800::/32"
+        - "2405:b500::/32"
+        - "2405:8100::/32"
+        - "2a06:98c0::/29"
+        - "2c0f:f248::/32"
 
   # 国外域名
   - tag: geosite_no_cn
     type: domain_set
     args:
+      exps:
+        - "domain:piao.chat"
       files:
         #        - "/var/mosdns/geosite_geolocation-!cn.txt"
         - "/root/passwall/gfw.txt"
@@ -109,82 +135,54 @@ plugins:
   - tag: remote_domains
     type: domain_set
     args:
-      files:
-        - "/root/passwall/remote_domains.txt"
+      exps:
+        - "keyword:matrix.org"
+
+  - tag: local_ecs
+    type: "ecs_handler"
+    args:
+      forward: true # 是否转发来自下游的 ecs
+      preset: "115.171.91.0" # 发送预设 ecs，填写你代理出口附近的IP地址。
+      send: true # 是否发送 ecs
+      mask4: 24
+      mask6: 48
 
   # fallback的primary服务器,返回非国内ip则drop_resp
   - tag: local_sequence
     type: sequence
     args:
       - exec: $forward_local
+      - matches: "resp_ip $geoip_cloudflare"
+        exec: forward udp://127.0.0.1:5153
+#        exec: accept
+#        exec: black_hole 192.168.31.3
+#      - matches: "!resp_ip $geoip_cn"
+#        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
+      - exec: accept
+
+  - tag: remote_sequence
+    type: sequence
+    args:
+      - exec: $local_ecs
+      - exec: $forward_remote
+      - matches: "resp_ip $geoip_cloudflare"
+        exec: forward udp://127.0.0.1:5153
+#        exec: accept
+#        exec: black_hole 192.168.31.3
       - matches: "!resp_ip $geoip_cn"
         exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
       - exec: accept
 
-  # 远程dns1
-  - tag: adguard_sequence
-    type: sequence
-    args:
-      - exec: $forward_local
-      - matches: "qname $geosite_cn"
-        exec: accept
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
-      - exec: query_summary local
-      - exec: accept
 
-  # fallback的secondary服务器,返回非国内ip则添加至ipset,返回国内ip只接受不会添加ipset
-  - tag: remote_sequence1
-    type: sequence
-    args:
-      - exec: $forward_remote1
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
-      - exec: accept
-
-  - tag: remote_sequence2
-    type: sequence
-    args:
-      - exec: $forward_remote2
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
-      - exec: accept
 
   # fallback sequence
   - tag: fallback
     type: fallback
     args:
       primary: local_sequence
-      secondary: remote_sequence2
+      secondary: remote_sequence
       threshold: 500
-      always_standby: true
-
-  # gfwlist解析出的ip添加至ipset，添加前先判断是否为国内ip或内网ip
-  - tag: gfw-list
-    type: sequence
-    args:
-      - exec: ttl 600
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
-      - exec: accept
-
-  - tag: final1
-    type: sequence
-    args:
-      - exec: $forward_local
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
-      - matches:
-        exec: accept
-
-  - tag: final2
-    type: sequence
-    args:
-      - exec: $remote_sequence1
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
-      - matches:
-        exec: accept
+      always_standby: false
 
   # 主运行序列
   - tag: main_sequence
@@ -194,8 +192,9 @@ plugins:
       - matches: has_resp
         exec: accept
 
-      - matches: qtype 65
-        exec: reject 3
+#      - matches: qtype 65
+#        exec: reject 3
+      - exec: prefer_ipv4
 
       # 缓存逻辑
       - matches: "!qname www1.327237.xyz"
@@ -206,19 +205,24 @@ plugins:
       # 国内域名走运营商dns
       - matches: qname $geosite_cn
         exec: $forward_local
-      - matches: has_resp
-        exec: accept
-
-      # 走国外dns
-      - matches: qname $remote_domains
-        exec: $forward_remote2
-      - matches: "!resp_ip $geoip_cn"
-        exec: nftset inet,xray,gfwlist,ipv4_addr,24 inet,xray,gfwlist6,ipv6_addr,48
+      - matches: "resp_ip $geoip_cloudflare"
+        exec: forward udp://127.0.0.1:5153
+#        exec: accept
+#        exec: black_hole 192.168.31.3
       - matches: has_resp
         exec: accept
 
       # fakedns逻辑
-      - matches: qname $geosite_gfw
+      - matches:
+        - qname $geosite_gfw
+        - qtype 1
+        exec: forward udp://127.0.0.1:5153
+      - matches: has_resp
+        exec: accept
+
+      - matches:
+          - qname $geosite_gfw
+          - qtype 28
         exec: forward udp://127.0.0.1:5153
       - matches: has_resp
         exec: accept

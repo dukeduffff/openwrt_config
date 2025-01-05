@@ -21,9 +21,10 @@
       "sniffing": {
         "enabled": true,
         "destOverride": [
-          "fakedns",
-          "http",
-          "tls"
+          "fakedns+others"
+        ],
+        "domainsExcluded": [
+          "h2.cftunnel.com"
         ]
       },
       "streamSettings": {
@@ -57,128 +58,45 @@
         ]
       },
       "tag": "remote_in"
+    },
+    {
+      "tag": "reality_in",
+      "port": 1069,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "47c6a45d-67f8-45ad-83aa-1aaa2e1b1956",
+            "flow": "xtls-rprx-vision"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "raw",
+        "security": "reality",
+        "realitySettings": {
+          "target": "www.327237.xyz:443",
+          "serverNames": [
+            "fe-static.xhscdn.com"
+          ],
+          "xver": 0,
+          "privateKey": "AIXUTJLUvlUbpxMuyePW1jdi1VZ1LqRXyAZGB8uTmXw",
+          "shortIds": [
+            "1abad697a3"
+          ]
+        }
+      }
     }
   ],
   "outbounds": [
-    {
-      "protocol": "vless",
-      "streamSettings": {
-        "grpcSettings": {
-          "serviceName": "grpc",
-          "multiMode": false,
-          "idle_timeout": 13,
-          "permit_without_stream": true
-        },
-        "tlsSettings": {
-          "allowInsecure": true,
-          "serverName": "www.327237.xyz"
-        },
-        "security": "tls",
-        "network": "grpc",
-        "sockopt": {
-          "mark": 255
-        }
-      },
-      "tag": "proxy_grpc",
-      "settings": {
-        "vnext": [
-          {
-            "address": "2401:b60:16:a9::",
-            "users": [
-              {
-                "encryption": "none",
-                "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1",
-                "level": 0
-              }
-            ],
-            "port": 10201
-          }
-        ]
-      }
-    },
-    {
-      "protocol": "vless",
-      "settings": {
-        "vnext": [
-          {
-            "address": "154.16.183.59",
-            "port": 443,
-            "users": [
-              {
-                "id": "47c6a45d-67f8-45ad-83aa-1aaa2e1b1956",
-                "encryption": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "streamSettings": {
-        "network": "h2",
-        "security": "reality",
-        "realitySettings": {
-          "fingerprint": "chrome",
-          "serverName": "www.discoverhongkong.com",
-          "publicKey": "mG_T9pV16XRffX8_kx88yKEQDaagQXOXB2Ic-71bBGk",
-          "shortId": "1abad697a3"
-        },
-        "httpSettings": {
-          "host": [],
-          "path": "/",
-          "read_idle_timeout": 60,
-          "health_check_timeout": 20
-        },
-        "sockopt": {
-          "mark": 255
-        }
-      },
-      "tag": "proxy_http2_reality"
-    },
-    {
-      "protocol": "vmess",
-      "streamSettings": {
-        "httpupgradeSettings": {
-          "path": "/http_content?ed=2560",
-          "host": "www.327237.xyz"
-        },
-        "tlsSettings": {
-          "allowInsecure": false,
-          "serverName": "www.327237.xyz",
-          "fingerprint": "chrome"
-        },
-        "security": "tls",
-        "network": "httpupgrade",
-        "sockopt": {
-          "mark": 255
-        }
-      },
-      "tag": "proxy_http",
-      "settings": {
-        "vnext": [
-          {
-            "address": "www.327237.xyz",
-            "users": [
-              {
-                "encryption": "none",
-                "id": "8d5e94e2-8cfa-4e9c-85c7-7e6c5850c5e1",
-                "level": 0
-              }
-            ],
-            "port": 8443
-          }
-        ]
-      },
-      "mux": {
-        "enabled": true,
-        "concurrency": 8
-      }
-    },
     {
       "tag": "proxy_socks",
       "protocol": "socks",
       "settings": {
         "servers": [
           {
-            "address": "127.0.0.1",
+            "address": "192.168.31.3",
             "port": 1081
           }
         ]
@@ -239,12 +157,12 @@
       {
         "type": "field",
         "inboundTag": "in",
-        "outboundTag": "proxy_grpc"
+        "outboundTag": "proxy_socks"
       },
       {
         "type": "field",
         "inboundTag": "dns_inbound",
-        "outboundTag": "proxy_grpc"
+        "outboundTag": "proxy_socks"
       },
       {
         "type": "field",
@@ -264,7 +182,12 @@
       {
         "type": "field",
         "inboundTag": "remote_in",
-        "outboundTag": "proxy_http2_reality"
+        "outboundTag": "proxy_socks"
+      },
+      {
+        "type": "field",
+        "inboundTag": "reality_in",
+        "outboundTag": "proxy_socks"
       }
     ]
   },

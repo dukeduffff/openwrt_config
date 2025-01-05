@@ -18,17 +18,19 @@ run_without_output() {
 
 current_dir=$(pwd)
 echo_self "opkg更新"
-run_without_output opkg update
+#run_without_output opkg update
 
-check_pkg_and_install unzip
-check_pkg_and_install wget
+#check_pkg_and_install unzip
+#check_pkg_and_install wget
 
 TMP_DOWNLOAD="/tmp/xray_install"
 INSTALL_PATH="/root/passwall"
 #XRAY_URL="https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip"
-XRAY_URL="https://gh-proxy.com/https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip"
+XRAY_URL="https://gh-proxy.com/https://github.com/XTLS/Xray-core/releases/download/v24.12.31/Xray-linux-64.zip"
 # https://github.com/Loyalsoldier/v2ray-rules-dat
 GFW_URL="https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/gfw.txt"
+# ip cn 列表
+GEO_IP_URL = 'https://github.com/mayaxcn/china-ip-list'
 
 rm -rf ${TMP_DOWNLOAD}/*
 rm -rf ${INSTALL_PATH}/*
@@ -61,7 +63,7 @@ run_without_output /etc/init.d/xray enable  # 开机自启xray进程
 #sed -i "/exit(0);/r bash ${INSTALL_PATH}/xray_autoboot.sh" /etc/rc.local
 
 cd ${INSTALL_PATH}
-wget -O gfw.txt ${GFW_URL}
+#wget -O gfw.txt ${GFW_URL}
 bash ./xray_autoboot.sh
 
 /etc/init.d/xray start

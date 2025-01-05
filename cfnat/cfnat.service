@@ -1,0 +1,15 @@
+[Unit]
+Description=CFNat Service
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/workspace/tools/cfnat/
+ExecStart=/root/workspace/tools/cfnat/start.sh
+Restart=always
+RestartSec=5
+StandardOutput=append:/root/workspace/cfnat.log
+StandardError=append:/root/workspace/cfnat.log
+
+[Install]
+WantedBy=multi-user.target

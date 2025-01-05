@@ -1,5 +1,5 @@
 [Unit]
-Description=V2Ray Service
+Description=xray Service
 Documentation=https://www.v2fly.org/
 After=network.target nss-lookup.target
 
@@ -8,9 +8,12 @@ User=root
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=/root/xray/xray run -config /root/xray/config.json
+WorkingDirectory=/root/workspace/tools/xray
+ExecStart=/root/workspace/tools/xray/xray run -config /root/workspace/tools/xray/config.json
 Restart=on-failure
 RestartPreventExitStatus=23
+StandardOutput=null
+StandardError=null
 
 [Install]
 WantedBy=multi-user.target

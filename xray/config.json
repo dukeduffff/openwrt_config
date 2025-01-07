@@ -40,7 +40,7 @@
       "tag": "dns-in",
       "protocol": "dokodemo-door",
       "settings": {
-        "address": "8.8.8.8",
+        "address": "1.1.1.1",
         "port": 53,
         "network": "tcp,udp",
         "userLevel": 1
@@ -60,32 +60,21 @@
       "tag": "remote_in"
     },
     {
-      "tag": "reality_in",
+      "tag": "ss_in",
       "port": 1069,
-      "protocol": "vless",
+      "protocol": "shadowsocks",
       "settings": {
+        "network": "tcp,udp",
+        "password": "qzxSTYFeetT1jQnFemBPcA==",
+        "method": "chacha20-ietf-poly1305",
+        "level": 0,
+        "email": "xx@x.com",
         "clients": [
           {
-            "id": "47c6a45d-67f8-45ad-83aa-1aaa2e1b1956",
-            "flow": "xtls-rprx-vision"
+            "password": "qzxSTYFeetT1jQnFemBPcA==",
+            "method": "chacha20-ietf-poly1305"
           }
-        ],
-        "decryption": "none"
-      },
-      "streamSettings": {
-        "network": "raw",
-        "security": "reality",
-        "realitySettings": {
-          "target": "www.327237.xyz:443",
-          "serverNames": [
-            "fe-static.xhscdn.com"
-          ],
-          "xver": 0,
-          "privateKey": "AIXUTJLUvlUbpxMuyePW1jdi1VZ1LqRXyAZGB8uTmXw",
-          "shortIds": [
-            "1abad697a3"
-          ]
-        }
+        ]
       }
     }
   ],
@@ -122,11 +111,6 @@
     {
       "protocol": "dns",
       "tag": "dns-out",
-      "streamSettings": {
-        "sockopt": {
-          "mark": 255
-        }
-      },
       "proxySettings": {
         "tag": "proxy_socks"
       }
@@ -186,7 +170,7 @@
       },
       {
         "type": "field",
-        "inboundTag": "reality_in",
+        "inboundTag": "ss_in",
         "outboundTag": "proxy_socks"
       }
     ]
